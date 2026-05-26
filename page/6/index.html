@@ -140,7 +140,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">206</span>
+          <span class="site-state-item-count">207</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -151,7 +151,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">310</span>
+        <span class="site-state-item-count">311</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -168,6 +168,264 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2023/05/26/MySQL%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8D%A1%E9%A1%BF%E9%87%8D%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="twitter @plantegg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="plantegg">
+      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | plantegg">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2023/05/26/MySQL%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8D%A1%E9%A1%BF%E9%87%8D%E7%8E%B0/" class="post-title-link" itemprop="url">MySQL线程池卡顿重现</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-05-26 17:30:03" itemprop="dateCreated datePublished" datetime="2023-05-26T17:30:03+08:00">2023-05-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2025-11-16 19:58:49" itemprop="dateModified" datetime="2025-11-16T19:58:49+08:00">2025-11-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="MySQL线程池卡顿重现"><a href="#MySQL线程池卡顿重现" class="headerlink" title="MySQL线程池卡顿重现"></a>MySQL线程池卡顿重现</h1><p>by @wych42 </p>
+<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>为了激励大家多动手少空想，我在推特发起了白嫖我的<a target="_blank" rel="noopener" href="http://t.zsxq.com/0cz93XUPj">知识星球活动</a>：</p>
+<blockquote>
+<p>白嫖我星球的机会来了，总有人说贵、没有优惠券，这次直接来一个完全100%免费的机会，要求： 在MySQL的基础上重现某个线程池卡的现象，给出可复制的重现过程。就是因为某个线程池满了导致落到这个池里的查询一定都慢，否则都快。 不愿意出钱就动手吧</p>
+</blockquote>
+<p>参考现象：<a href="https://plantegg.github.io/2020/11/17/MySQL%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%AF%BC%E8%87%B4%E7%9A%84%E5%BB%B6%E6%97%B6%E5%8D%A1%E9%A1%BF%E6%8E%92%E6%9F%A5/">https://plantegg.github.io/2020/11/17/MySQL%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%AF%BC%E8%87%B4%E7%9A%84%E5%BB%B6%E6%97%B6%E5%8D%A1%E9%A1%BF%E6%8E%92%E6%9F%A5/</a></p>
+<hr>
+<p>感谢推友<a target="_blank" rel="noopener" href="https://twitter.com/wych42">王鱼翅</a>同学，以下是他的教科书级的细致重现，你复制粘贴就能和他一样重现了</p>
+<h2 id="这个案例的重要性"><a href="#这个案例的重要性" class="headerlink" title="这个案例的重要性"></a>这个案例的重要性</h2><p>这个现象对应我们年度四大案例之一，如下图左下角</p>
+<p><img src="/images/951413iMgBlog/image-20230517082106489.png" alt="image-20230517082106489"></p>
+<p>重现后请思考：</p>
+<ol>
+<li>MySQL为什么要将多个线程分成小池子，小池子肯定容易局部资源不足</li>
+<li>Nginx 一个连接固定在一个worker上，那么同样多个Worker也会有不均衡(有的worker很闲，有的很卡)</li>
+<li>动手实验一下将多个小池子改成一个大线程池会怎么样</li>
+<li>Java ConcurrentHashMap为什么能够高性能</li>
+</ol>
+<p>由 @wych42 重现 </p>
+<h2 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h2><p>根据 <a target="_blank" rel="noopener" href="https://www.brendangregg.com/usemethod.html">USE</a> 分析套路。看到服务端执行快，但是整体RT慢的现象，大概率是中间哪个位置有排队。根据文章里的描述，原因是在thread pool group中出现了排队。</p>
+<p>排队的主要原因是服务端拒绝创建新的thread（worker），导致新进来的SQL需要等待前面的执行完成。那么就需要重点分析thread(worker)的创建过程和约束条件。根据文章和文档的说明，重点在thread_pool_size, thread_pool_oversubscribe, thread_pool_max_threads, thread_pool_stall_limit这几个参数上。</p>
+<p>跟据文档分析和实际执行结果，这几个参数在MySQL不同的发型版中的行为逻辑是不尽相同的。核心差异在对创建新worker的限制条件上，后面复现也会根据两个发型版的特点分别执行。</p>
+<h2 id="mariadb"><a href="#mariadb" class="headerlink" title="mariadb"></a>mariadb</h2><p><a target="_blank" rel="noopener" href="https://mariadb.com/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">文档</a></p>
+<ul>
+<li>通常情况下，新worker由listener worker创建</li>
+<li>当timer worker检测到thread group 有stall时，可能会选择创建一个新的worker</li>
+<li>worker的数量上限由thread_pool_max_threads限制</li>
+<li>thread_pool_oversubscribe约束的是被额外创建出来的worker，在执行完任务后，最多能保留active状态的数量<blockquote>
+<p>To clarify, the thread_pool_oversubscribe system variable does not play any part in the creation of new worker threads. The thread_pool_oversubscribe system variable is only used to determine how many worker threads should remain active in a thread group, once a thread group is already oversubscribed due to stalls.</p>
+</blockquote>
+</li>
+</ul>
+<h2 id="percona"><a href="#percona" class="headerlink" title="percona"></a>percona</h2><p><a target="_blank" rel="noopener" href="https://docs.percona.com/percona-server/8.0/performance/threadpool.html">文档</a></p>
+<p>percona的行为更符合原文章里的说明：</p>
+<ul>
+<li>如果线程执行超过时间 thread_pool_stall_limit 的值，会被任务stalled，会创建一个新的线程执行排队的任务</li>
+<li>thread_pool_oversubscribe 约束了每个thread group的线程数上限。</li>
+</ul>
+<h2 id="尝试复现"><a href="#尝试复现" class="headerlink" title="尝试复现"></a>尝试复现</h2><h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><p>并发向DB发起请求，观察客户端耗时，这些请求应当符合这些条件：</p>
+<ul>
+<li>可控的并发数量：以对比数据库服务端不同参数值的情况</li>
+<li>有稳定的、相同的服务端执行耗时：以对比客户端在不同场景下的耗时</li>
+<li>对服务端的硬件压力较小：避免因为并发不同时，因IO、CPU资源占用，影响服务端执行耗时</li>
+</ul>
+<p>综合考虑使用 <code>select sleep(2); </code>作为测试SQL。并发控制使用下面的golang代码实现。</p>
+<p>再控制数据库服务端参数，运行同一个并发程序进行对比，mariadb和percona分析执行运行过程：</p>
+<h2 id="复现执行"><a href="#复现执行" class="headerlink" title="复现执行"></a>复现执行</h2><h3 id="mariadb-1"><a href="#mariadb-1" class="headerlink" title="mariadb"></a>mariadb</h3><p>由上面分析可以，mariadb 中造成排队的约束是thread_pool_max_threads。</p>
+<h4 id="执行方案"><a href="#执行方案" class="headerlink" title="执行方案"></a>执行方案</h4><ul>
+<li>DB配置</li>
+</ul>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">| thread_pool_max_threads                 | 6               |</span><br><span class="line">| thread_pool_oversubscribe               | 1               |</span><br><span class="line">| thread_pool_size                        | 1               |</span><br><span class="line">| thread_pool_stall_limit                 | 500             |</span><br></pre></td></tr></table></figure>
+<ul>
+<li>执行SQL <code>select sleep(2)</code></li>
+<li>执行并发：8</li>
+</ul>
+<p>预期结果： 6个SQL执行的客户端观察耗时为2s；2个SQL为4s</p>
+<p>若调整 thread_pool_max_threads&#x3D;8，则8个SQL的执行客户端观察耗时都为2s</p>
+<h4 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h4><ol>
+<li>thread_pool_max_threads&#x3D;6;concurrency&#x3D;8</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">go run ./main.go</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_3</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_1</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_6</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_4</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_0</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_7</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_2</span><br><span class="line">2023/05/16 13:34:51 starting taskId:task_5</span><br><span class="line">2023/05/16 13:34:53 taskId:task_0 exec cost : 2.021305666s</span><br><span class="line">2023/05/16 13:34:53 taskId:task_6 exec cost : 2.021421041s</span><br><span class="line">2023/05/16 13:34:53 taskId:task_3 exec cost : 2.021258917s</span><br><span class="line">2023/05/16 13:34:53 taskId:task_2 exec cost : 2.021275458s</span><br><span class="line">2023/05/16 13:34:53 taskId:task_4 exec cost : 2.021254083s</span><br><span class="line">2023/05/16 13:34:53 taskId:task_7 exec cost : 2.02146725s</span><br><span class="line">2023/05/16 13:34:55 taskId:task_5 exec cost : 4.021478584s</span><br><span class="line">2023/05/16 13:34:55 taskId:task_1 exec cost : 4.02192s</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>thread_pool_max_threads&#x3D;8;concurrency&#x3D;8</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">go run ./main.go</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_7</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_3</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_1</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_5</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_0</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_6</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_4</span><br><span class="line">2023/05/16 13:36:17 starting taskId:task_2</span><br><span class="line">2023/05/16 13:36:19 taskId:task_6 exec cost : 2.045480167s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_2 exec cost : 2.045405667s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_7 exec cost : 2.045507334s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_1 exec cost : 2.04553075s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_3 exec cost : 2.04554975s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_0 exec cost : 2.045697375s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_4 exec cost : 2.046417375s</span><br><span class="line">2023/05/16 13:36:19 taskId:task_5 exec cost : 2.046453792s</span><br></pre></td></tr></table></figure>
+
+<p>均符合预期。</p>
+<h3 id="percona-1"><a href="#percona-1" class="headerlink" title="percona"></a>percona</h3><p>由上面分析可以，percona中造成排队的约束是thread_pool_oversubscribe。</p>
+<h4 id="执行方案-1"><a href="#执行方案-1" class="headerlink" title="执行方案"></a>执行方案</h4><ul>
+<li>DB配置: thread_pool_max_threads设置一个较大的值，以排除影响。</li>
+</ul>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">| thread_pool_max_threads                 | 1000               |</span><br><span class="line">| thread_pool_oversubscribe               | 1               |</span><br><span class="line">| thread_pool_size                        | 1               |</span><br><span class="line">| thread_pool_stall_limit                 | 500             |</span><br></pre></td></tr></table></figure>
+<ul>
+<li>执行SQL <code>select sleep(2)</code></li>
+<li>执行并发：8</li>
+</ul>
+<p>预期结果： 客户端观察到的耗时分四个批次输出，每个批次2个SQL，耗时分别为2s,4s,6s,8s.</p>
+<p>若调整 thread_pool_oversubscribe&#x3D;2，则三个批次输出，分别为3条SQL耗时均为2s，3条SQL耗时均为4s，2条SQL耗时均为6s</p>
+<h4 id="执行结果-1"><a href="#执行结果-1" class="headerlink" title="执行结果"></a>执行结果</h4><ol>
+<li>thread_pool_oversubscribe&#x3D;1,concurrency&#x3D;8</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">go run ./main.go</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_2</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_4</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_3</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_5</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_6</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_0</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_1</span><br><span class="line">2023/05/16 13:39:35 starting taskId:task_7</span><br><span class="line">2023/05/16 13:39:37 taskId:task_7 exec cost : 2.063547416s</span><br><span class="line">2023/05/16 13:39:37 taskId:task_0 exec cost : 2.064091541s</span><br><span class="line">2023/05/16 13:39:39 taskId:task_5 exec cost : 4.06672125s</span><br><span class="line">2023/05/16 13:39:39 taskId:task_6 exec cost : 4.066822583s</span><br><span class="line">2023/05/16 13:39:41 taskId:task_3 exec cost : 6.067720292s</span><br><span class="line">2023/05/16 13:39:41 taskId:task_2 exec cost : 6.069995s</span><br><span class="line">2023/05/16 13:39:43 taskId:task_4 exec cost : 8.069296042s</span><br><span class="line">2023/05/16 13:39:43 taskId:task_1 exec cost : 8.071391709s</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li>thread_pool_oversubscribe&#x3D;2,concurrency&#x3D;8</li>
+</ol>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">go run ./main.go</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_7</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_1</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_3</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_2</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_5</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_6</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_4</span><br><span class="line">2023/05/16 13:41:02 starting taskId:task_0</span><br><span class="line">2023/05/16 13:41:04 taskId:task_1 exec cost : 2.057093667s</span><br><span class="line">2023/05/16 13:41:04 taskId:task_3 exec cost : 2.057156334s</span><br><span class="line">2023/05/16 13:41:04 taskId:task_5 exec cost : 2.057170667s</span><br><span class="line">2023/05/16 13:41:06 taskId:task_6 exec cost : 4.066917041s</span><br><span class="line">2023/05/16 13:41:06 taskId:task_7 exec cost : 4.066944125s</span><br><span class="line">2023/05/16 13:41:06 taskId:task_2 exec cost : 4.066976875s</span><br><span class="line">2023/05/16 13:41:08 taskId:task_4 exec cost : 6.070653125s</span><br><span class="line">2023/05/16 13:41:08 taskId:task_0 exec cost : 6.070612083s</span><br></pre></td></tr></table></figure>
+
+<p>均符合预期。</p>
+<h3 id="real-world-模拟（percona）版本"><a href="#real-world-模拟（percona）版本" class="headerlink" title="real-world 模拟（percona）版本"></a>real-world 模拟（percona）版本</h3><p>现实场景中，很少会有大批量的2s在SQL在生产环境执行（限互联网业务)，上述的分析过程能否在真实场景中验证呢？尝试用一个执行200ms的SQL来模拟下：</p>
+<ul>
+<li>DB配置: thread_pool_max_threads设置一个较大的值，以排除影响。</li>
+</ul>
+ <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">| thread_pool_max_threads                 | 1000               |</span><br><span class="line">| thread_pool_oversubscribe               | 1               |</span><br><span class="line">| thread_pool_size                        | 1               |</span><br><span class="line">| thread_pool_stall_limit                 | 500             |</span><br></pre></td></tr></table></figure>
+<ul>
+<li>执行SQL <code>select sleep(0.2)</code></li>
+<li>执行并发：10</li>
+</ul>
+<p>从执行结果中可以看到，只有第一条SQL按照预期的时间执行完成了。<br>从抓包结果中可以看到，所有SQL几乎是同时发出。观察最慢的一条SQL,但是从客户端发包到服务端响应包发出的耗时，与客户端观察到的耗时也能对应上。</p>
+<p>可以验证上述分析过程。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">2023/05/16 14:47:47 taskId:task_1 exec cost : 239.34925ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_9 exec cost : 239.560833ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_5 exec cost : 453.795084ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_3 exec cost : 458.0005ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_6 exec cost : 659.441541ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_8 exec cost : 659.660917ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_0 exec cost : 862.526375ms</span><br><span class="line">2023/05/16 14:47:47 taskId:task_7 exec cost : 864.450042ms</span><br><span class="line">2023/05/16 14:47:48 taskId:task_2 exec cost : 1.063766875s</span><br><span class="line">2023/05/16 14:47:48 taskId:task_4 exec cost : 1.066266041s</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/951413iMgBlog/238557399-c92e2c4e-436f-4f89-ba87-48c49b5393ac.png" alt="send_sql"></p>
+<p><img src="/images/951413iMgBlog/238557635-1209f057-0c3c-4cfd-9072-12bfc112b4c6.png" alt="response_delay"></p>
+<h3 id="复现文章中部分线程池卡的现象"><a href="#复现文章中部分线程池卡的现象" class="headerlink" title="复现文章中部分线程池卡的现象"></a>复现文章中部分线程池卡的现象</h3><p>配置两个线程池，在其中一个线程池上,通过<code>select sleep()</code>较长时间模拟线程池被慢SQL或者大量任务堵塞的情况，具体配置方案如下：</p>
+<ul>
+<li>thread_pool_size&#x3D;2: 保留两个线程池，验证一个卡顿，一个不卡</li>
+<li>thread_pool_oversubscribe&#x3D;1: 允许多创建一个线程，每个线程池中可以同时运行1+1&#x3D;2个线程</li>
+<li>thread_pool_max_threads&#x3D;2: 每个线程池的线程数量上限，为thread_pool_oversubscribe的配置约束加一个硬限制，每个线程池中最多允许运行2个线程</li>
+</ul>
+<p>操作步骤如下:</p>
+<ul>
+<li>通过mysql client在终端发起链接，通过 <code>show processlist</code>语句获取到链接Id, 该链接会分配到 id%2 的线程池中。</li>
+<li>用偶数id的链接验证卡顿线程池，用奇数id的链接验证不卡的线程池，链接情况如下:</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">  show processlist;</span><br><span class="line">+-----+-----------------+----------------+------+---------+-------+------------------------+------------------+----------+-----------+---------------+</span><br><span class="line">| Id  | User            | Host           | db   | Command | Time  | State                  | Info             | Time_ms  | Rows_sent | Rows_examined |</span><br><span class="line">+-----+-----------------+----------------+------+---------+-------+------------------------+------------------+----------+-----------+---------------+</span><br><span class="line">|   5 | event_scheduler | localhost      | NULL | Daemon  | 23664 | Waiting on empty queue | NULL             | 23663650 |         0 |             0 |</span><br><span class="line">| 404 | root            | _gateway:51310 | NULL | Sleep   |  7256 |                        | NULL             |  7256057 |         1 |             1 |</span><br><span class="line">| 405 | root            | _gateway:48860 | NULL | Sleep   |  7295 |                        | NULL             |  7295342 |         1 |             1 |</span><br><span class="line">| 406 | root            | _gateway:41144 | NULL | Sleep   |  7254 |                        | NULL             |  7254236 |         1 |             1 |</span><br><span class="line">| 410 | root            | _gateway:46794 | NULL | Sleep   |  7196 |                        | NULL             |  7196042 |         1 |             1 |</span><br><span class="line">+-----+-----------------+----------------+------+---------+-------+------------------------+------------------+----------+-----------+---------------+</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在 id&#x3D;404, id&#x3D;406的链接上，执行 <code>select sleep(30)</code>，再到 id&#x3D;410 的链接上执行 <code>select 1</code>，预计 <code>select &#39;slow&#39;</code>会直接卡顿约30s再执行完成。</li>
+<li>同时，在id&#x3D;405的链接上，反复执行 <code>select &#39;fast&#39;</code>,都可以很快执行完成。</li>
+</ul>
+<p>执行结果:</p>
+<ul>
+<li>id&#x3D;410 上的语句执行约25s返回结果（终端操作手速影响导致了5s误差）,语句执行时数据库实例输出报错日志，提示线程不足:<blockquote>
+<p>2023-05-16T11:27:09.997916Z 406 [ERROR] [MY-000000] [Server] Threadpool could not create additional thread to handle queries, because the number of allowed threads was reached. Increasing ‘thread_pool_max_threads’ parameter can help in this situation.  If ‘admin_port’ parameter is set, you can still connect to the database with superuser account (it must be TCP connection using admin_port as TCP port) and troubleshoot the situation. A likely cause of pool blocks are clients that lock resources for long time. ‘show processlist’ or ‘show engine innodb status’ can give additional hints.</p>
+</blockquote>
+</li>
+<li>id&#x3D;405链接上的执行都行快。可参考下面抓包截图。</li>
+</ul>
+<p>抓包结果:</p>
+<p>id&#x3D;410 上的阻塞SQL,可以看到:</p>
+<ol>
+<li>三条语句在3s内接连发出,但是由于线程池阻塞， <code>select &#39;slow&#39;</code>原本应该很快返回结果，被卡住</li>
+<li>在30s时，第一个<code>select sleep(30)</code>语句执行完成，空出的线程立刻执行了 <code>select &#39;slow&#39;</code>并返回结果<br><img src="/images/951413iMgBlog/238638548-c4161d72-b94c-43ef-b698-3acc1002eb43.png" alt="slow query"></li>
+</ol>
+<p>id&#x3D;405链接上的执行结果可以看到，每条语句执行都很快。<br><img src="/images/951413iMgBlog/238637635-323fca3b-edf1-4ae7-8d68-d9db9811c692.png" alt="fast query"></p>
+<h1 id="参数合理值-已知参数的容量评估"><a href="#参数合理值-已知参数的容量评估" class="headerlink" title="参数合理值&#x2F;已知参数的容量评估"></a>参数合理值&#x2F;已知参数的容量评估</h1><p>percona 的默认配置中，thread_pool_size&#x3D;核心数，thread_pool_oversubscribe&#x3D;3.假设在一台 16core 的服务器上运行percona，默认配置下最多可以有 16*(1+3)&#x3D;64个worker同时接受请求。也就是最大可并行处理的SQL数量为 64 个。</p>
+<p>假设同时有65个执行耗时为10ms的SQL到达服务端，理论上，会有一个进入排队。排查网络、解析等阶段，在客户端观察到的64个SQL执行耗时10ms，1个SQL执行耗时约20ms。这也会导致耗时监控中出现毛刺、耗时分布不符合正态分布。</p>
+<p>反之，根据硬件配置、查询的量、耗时等特点，也可以推算合理的参数值。</p>
+<h1 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h1><h2 id="过程回顾"><a href="#过程回顾" class="headerlink" title="过程回顾"></a>过程回顾</h2><h3 id="阶段一-确定原因"><a href="#阶段一-确定原因" class="headerlink" title="阶段一 确定原因"></a>阶段一 确定原因</h3><p>看到文章时，基本确认问题根源在执行线程(worker)不够，导致排队，出于以下几点分析:</p>
+<ul>
+<li>开头提到的 <a target="_blank" rel="noopener" href="https://www.brendangregg.com/usemethod.html">USE</a> 分析套路，结合排查过类似问题(非SQL)的经验</li>
+<li>看到文章作者调大thread_pool_oversubscribe便解决问题, 结合文章中对该参数作用的文档引用，基本可以确定</li>
+</ul>
+<h3 id="阶段二-走上弯路"><a href="#阶段二-走上弯路" class="headerlink" title="阶段二 走上弯路"></a>阶段二 走上弯路</h3><p>尝试复现时，要先启动一个DB实例，便查询文档该参数如何在配置文件中配置，查了MySQL的文档，似乎只在enterprise版本中才有该配置项，便转头去看mariadb的配置说明(这一步给走弯路埋下了伏笔)。</p>
+<p>用docker在本地启动了mariadb实例(thread_pool_size&#x3D;2 thread_pool_oversubscribe&#x3D;1)</p>
+<p>先尝试用 <code>select sleep(30)</code> 模拟阻塞，用 sysbench 模拟正常流量，结果失败：</p>
+<ol>
+<li>正常流量中有慢的，但是整体还符合正态分布，没有出现都卡的情况。</li>
+<li>加大了  <code>select sleep(30)</code> 查询的并发量，现象同上。</li>
+</ol>
+<p>又翻阅了一些文档，看到DB在调度时，对不同类型的SQL调度优先级会有所区别，类似sleep这种啥也不干的SQL，会不会被降低调度优先级，才导致了没有复现呢？(走上了弯路)</p>
+<p>尝试人工制造慢查询:</p>
+<ol>
+<li>用 sysbench 制造百万量级的表</li>
+<li>执行 offset limit 的排序查询，并且不走索引</li>
+</ol>
+<p>复现结果仍不满意：</p>
+<ol>
+<li>整体耗时上升了，出现几笔长尾的耗时特别长的请求</li>
+<li>但是整体仍然符合正态分布</li>
+</ol>
+<p>此时分析了下，整体耗时上升是人工制造的慢查询，占用了过多IO和CPU资源，影响了sysbench SQL执行的效率。</p>
+<h3 id="阶段三-柳岸花明"><a href="#阶段三-柳岸花明" class="headerlink" title="阶段三 柳岸花明"></a>阶段三 柳岸花明</h3><p>回头又仔细看了下 mariadb关于线程池的<a target="_blank" rel="noopener" href="https://mariadb.com/kb/en/thread-groups-in-the-unix-implementation-of-the-thread-pool/">文档</a>，注意到文档中提到 thread_pool_oversubscribe 不决定同时有多少线程池被创建出来并执行任务，这个行为逻辑与文章中作者引用的并不相同。<br>又去查看了另一个MySQL发行版 percona 的文档，对该配置的行为描述与文章中的相符，基本就确定前面复现失败的原因了。</p>
+<p>确定了前面提到的复现思路：用有稳定服务端执行耗时、并且不消耗大量硬件资源的SQL,用可控的并发进行模拟流量，到具体执行时：</p>
+<ul>
+<li>SQL就用 <code>select sleep(N)</code></li>
+<li>可控的并发就用 golang写个小脚本(事后看直接在终端手动操作也是可以的,不过写个脚本也不费事就是了)</li>
+</ul>
+<h2 id="mariadb-启动命令和配置"><a href="#mariadb-启动命令和配置" class="headerlink" title="mariadb 启动命令和配置"></a>mariadb 启动命令和配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mkdir mariadb</span><br><span class="line">cat &gt; mariadb/my.cnf &lt;&lt; EOF</span><br><span class="line">[mariadb]</span><br><span class="line">#thread pool</span><br><span class="line">thread_handling=pool-of-threads</span><br><span class="line">thread_pool_oversubscribe=1</span><br><span class="line">thread_pool_size=1</span><br><span class="line">thread_pool_max_threads=6</span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">docker run --name mariadb -v ./mariadb:/etc/mysql/conf.d -e MYSQL_ROOT_PASSWORD=password -p3306:3306 mariadb:10.3</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="percona-启动命令和配置"><a href="#percona-启动命令和配置" class="headerlink" title="percona 启动命令和配置"></a>percona 启动命令和配置</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">mkdir percona</span><br><span class="line">cat &gt; percona/my.cnf &lt;&lt; EOF</span><br><span class="line">[mysqld]</span><br><span class="line">#thread pool</span><br><span class="line">thread_handling=pool-of-threads</span><br><span class="line">thread_pool_oversubscribe=1</span><br><span class="line">thread_pool_size=1</span><br><span class="line">thread_pool_max_threads=1000</span><br><span class="line">default_authentication_plugin=mysql_native_password</span><br><span class="line">EOF</span><br><span class="line">docker run --name percona -v ./percona:/etc/my.cnf.d -e MYSQL_ROOT_PASSWORD=123 -p33060:3306 percona:ps-8</span><br></pre></td></tr></table></figure>
+
+<p>注：Mac M1启动percona时，需要在 docker run 后面添加 <code>--platform linux/x86_64</code> 参数。(percona 未提供arm架构的image)</p>
+<h2 id="其他人的重现和分析"><a href="#其他人的重现和分析" class="headerlink" title="其他人的重现和分析"></a>其他人的重现和分析</h2><p><a target="_blank" rel="noopener" href="https://lotabout.me/2023/Verification-of-Percona-Thread-Pool-Behavior/">https://lotabout.me/2023/Verification-of-Percona-Thread-Pool-Behavior/</a>  从源代码debug上来分析</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1757,514 +2015,6 @@
 <p>Hi Eric, I now have a packetdrill test that started failing (see below). Admittedly, a bit weird test with the SO_SNDBUF forced so low. Nevertheless, previously this test would pass, now it stalls after the write() because tcp_fragment() returns -ENOMEM. Your commit-message mentions that this could trigger when one sets SO_SNDBUF low. But, here we have a complete stall of the connection and we never recover.<br>I don’t know if we care about this, but there it is :-)</p>
 </blockquote>
 <p><a target="_blank" rel="noopener" href="https://patches.linaro.org/project/stable/patch/20210125183204.684104321@linuxfoundation.org/">一个 zero windows 下卡死的内核bug</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2022/10/10/Nginx%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="twitter @plantegg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="plantegg">
-      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | plantegg">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/10/10/Nginx%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95/" class="post-title-link" itemprop="url">Nginx 性能测试</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-10-10 12:30:03" itemprop="dateCreated datePublished" datetime="2022-10-10T12:30:03+08:00">2022-10-10</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-11-16 19:58:49" itemprop="dateModified" datetime="2025-11-16T19:58:49+08:00">2025-11-16</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/performance/" itemprop="url" rel="index"><span itemprop="name">performance</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Nginx-性能测试"><a href="#Nginx-性能测试" class="headerlink" title="Nginx 性能测试"></a>Nginx 性能测试</h1><p>压测工具选择 wrk ，apache ab压nginx单核没问题，多核的话 ab 自己先到瓶颈。另外默认关闭 access.log 避免 osq(osq 优化的自旋锁)。</p>
-<h2 id="Nginx-官方测试数据"><a href="#Nginx-官方测试数据" class="headerlink" title="Nginx 官方测试数据"></a><a target="_blank" rel="noopener" href="https://www.nginx.com/blog/testing-the-performance-of-nginx-and-nginx-plus-web-servers/">Nginx 官方测试数据</a></h2><p>普通测试数据参考官方数据，不再多做测试</p>
-<h3 id="RPS-for-HTTP-Requests"><a href="#RPS-for-HTTP-Requests" class="headerlink" title="RPS for HTTP Requests"></a>RPS for HTTP Requests</h3><p>The table and graph below show the number of HTTP requests for varying numbers of CPUs and varying request sizes, in kilobytes (KB).</p>
-<table>
-<thead>
-<tr>
-<th align="center">CPUs</th>
-<th align="center">0 KB</th>
-<th align="center">1 KB</th>
-<th align="center">10 KB</th>
-<th align="center">100 KB</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">1</td>
-<td align="center">145,551</td>
-<td align="center">74,091</td>
-<td align="center">54,684</td>
-<td align="center">33,125</td>
-</tr>
-<tr>
-<td align="center">2</td>
-<td align="center">249,293</td>
-<td align="center">131,466</td>
-<td align="center">102,069</td>
-<td align="center">62,554</td>
-</tr>
-<tr>
-<td align="center">4</td>
-<td align="center">543,061</td>
-<td align="center">261,269</td>
-<td align="center">207,848</td>
-<td align="center">88,691</td>
-</tr>
-<tr>
-<td align="center">8</td>
-<td align="center">1,048,421</td>
-<td align="center">524,745</td>
-<td align="center">392,151</td>
-<td align="center">91,640</td>
-</tr>
-<tr>
-<td align="center">16</td>
-<td align="center">2,001,846</td>
-<td align="center">972,382</td>
-<td align="center">663,921</td>
-<td align="center">91,623</td>
-</tr>
-<tr>
-<td align="center">32</td>
-<td align="center">3,019,182</td>
-<td align="center">1,316,362</td>
-<td align="center">774,567</td>
-<td align="center">91,640</td>
-</tr>
-<tr>
-<td align="center">36</td>
-<td align="center">3,298,511</td>
-<td align="center">1,309,358</td>
-<td align="center">764,744</td>
-<td align="center">91,655</td>
-</tr>
-</tbody></table>
-<p><a target="_blank" rel="noopener" href="https://www.nginx.com/wp-content/uploads/2017/08/NGINX-HTTP-RPS.png"><img src="/images/951413iMgBlog/NGINX-HTTP-RPS.png" alt="img"></a></p>
-<h3 id="RPS-for-HTTPS-Requests"><a href="#RPS-for-HTTPS-Requests" class="headerlink" title="RPS for HTTPS Requests"></a>RPS for HTTPS Requests</h3><p>HTTPS RPS is lower than HTTP RPS for the same provisioned bare‑metal hardware because the data encryption and decryption necessary to secure data transmitted between machines is computationally expensive.</p>
-<p>Nonetheless, continued advances in Intel architecture – resulting in servers with faster processors and better memory management – mean that the performance of software for CPU‑bound encryption tasks continually improves compared to dedicated hardware encryption devices.</p>
-<p>Though RPS for HTTPS are roughly one‑quarter less than for HTTP at the 16‑CPU mark, “throwing hardware at the problem” – in the form of additional CPUs – is more effective than for HTTP, for the more commonly used file sizes and all the way up to 36 CPUs.</p>
-<table>
-<thead>
-<tr>
-<th align="center">CPUs</th>
-<th align="center">0 KB</th>
-<th align="center">1 KB</th>
-<th align="center">10 KB</th>
-<th align="center">100 KB</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">1</td>
-<td align="center">71,561</td>
-<td align="center">40,207</td>
-<td align="center">23,308</td>
-<td align="center">4,830</td>
-</tr>
-<tr>
-<td align="center">2</td>
-<td align="center">151,325</td>
-<td align="center">85,139</td>
-<td align="center">48,654</td>
-<td align="center">9,871</td>
-</tr>
-<tr>
-<td align="center">4</td>
-<td align="center">324,654</td>
-<td align="center">178,395</td>
-<td align="center">96,808</td>
-<td align="center">19,355</td>
-</tr>
-<tr>
-<td align="center">8</td>
-<td align="center">647,213</td>
-<td align="center">359,576</td>
-<td align="center">198,818</td>
-<td align="center">38,900</td>
-</tr>
-<tr>
-<td align="center">16</td>
-<td align="center">1,262,999</td>
-<td align="center">690,329</td>
-<td align="center">383,860</td>
-<td align="center">77,427</td>
-</tr>
-<tr>
-<td align="center">32</td>
-<td align="center">2,197,336</td>
-<td align="center">1,207,959</td>
-<td align="center">692,804</td>
-<td align="center">90,430</td>
-</tr>
-<tr>
-<td align="center">36</td>
-<td align="center">2,175,945</td>
-<td align="center">1,239,624</td>
-<td align="center">733,745</td>
-<td align="center">89,842</td>
-</tr>
-</tbody></table>
-<h2 id="参考配置参数"><a href="#参考配置参数" class="headerlink" title="参考配置参数"></a>参考配置参数</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">user nginx;</span><br><span class="line">worker_processes 4;</span><br><span class="line">worker_cpu_affinity 00000000000000000000000000001111;</span><br><span class="line"></span><br><span class="line"># Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.</span><br><span class="line">include /usr/share/nginx/modules/*.conf;</span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">    use epoll;</span><br><span class="line">    accept_mutex off;</span><br><span class="line">    worker_connections 102400;</span><br><span class="line">&#125;</span><br><span class="line">http &#123;</span><br><span class="line">    access_log off;</span><br><span class="line"></span><br><span class="line">    sendfile            on;</span><br><span class="line">    sendfile_max_chunk 512k;</span><br><span class="line">    tcp_nopush          on;</span><br><span class="line">    keepalive_timeout   60;</span><br><span class="line">    keepalive_requests 100000000000;</span><br><span class="line"></span><br><span class="line">		#在 nginx.conf 中增加以下开销能提升短连接 RPS</span><br><span class="line">    open_file_cache max=10240000 inactive=60s;</span><br><span class="line">    open_file_cache_valid 80s;</span><br><span class="line">    open_file_cache_min_uses 1;</span><br><span class="line"></span><br><span class="line">    include             /etc/nginx/mime.types;</span><br><span class="line">    default_type        application/octet-stream;</span><br><span class="line"></span><br><span class="line">    # Load modular configuration files from the /etc/nginx/conf.d directory.</span><br><span class="line">    # See http://nginx.org/en/docs/ngx_core_module.html#include</span><br><span class="line">    # for more information.</span><br><span class="line">    include /etc/nginx/conf.d/*.conf;</span><br><span class="line"></span><br><span class="line">    server &#123;</span><br><span class="line">        listen       80 default_server;</span><br><span class="line">        listen       [::]:80 default_server;</span><br><span class="line">        server_name  _;</span><br><span class="line">        root         /apt/uos.aarch;</span><br><span class="line"></span><br><span class="line">        # Load configuration files for the default server block.</span><br><span class="line">        include /etc/nginx/default.d/*.conf;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        location /&#123;</span><br><span class="line">                #root /polarx/apt/uos.aarch;</span><br><span class="line">                index index.html;</span><br><span class="line">                autoindex on;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        location / &#123;</span><br><span class="line">        		#return 200 &#x27;a&#x27;;</span><br><span class="line">        		#root   /usr/share/nginx/html;</span><br><span class="line">        		#index  index.html index.htm;</span><br><span class="line">        		#autoindex 目录文件浏览模式</span><br><span class="line">        		autoindex on;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        error_page 404 /404.html;</span><br><span class="line">            location = /40x.html &#123;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        error_page 500 502 503 504 /50x.html;</span><br><span class="line">            location = /50x.html &#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;    </span><br></pre></td></tr></table></figure>
-
-<h3 id="https-配置"><a href="#https-配置" class="headerlink" title="https 配置"></a>https 配置</h3><p>解开https默认配置注释 &#x2F;&#x2F; sed -i “57,81s&#x2F;#(.*)&#x2F;\1&#x2F;“ &#x2F;etc&#x2F;nginx&#x2F;nginx.conf</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"># Settings for a TLS enabled server.</span><br><span class="line">#</span><br><span class="line">#    server &#123;</span><br><span class="line">#        listen       443 ssl http2 default_server;</span><br><span class="line">#        listen       [::]:443 ssl http2 default_server;</span><br><span class="line">#        server_name  _;</span><br><span class="line">#        root         /usr/share/nginx/html;</span><br><span class="line">#</span><br><span class="line">#        ssl_certificate &quot;/etc/pki/nginx/server.crt&quot;;</span><br><span class="line">#        ssl_certificate_key &quot;/etc/pki/nginx/private/server.key&quot;;</span><br><span class="line">#        ssl_session_cache shared:SSL:1m;</span><br><span class="line">#        ssl_session_timeout  10m;</span><br><span class="line">#        ssl_ciphers HIGH:!aNULL:!MD5;</span><br><span class="line">#        ssl_prefer_server_ciphers on;</span><br><span class="line">#</span><br><span class="line">#        # Load configuration files for the default server block.</span><br><span class="line">#        include /etc/nginx/default.d/*.conf;</span><br><span class="line">#</span><br><span class="line">#        location / &#123;</span><br><span class="line">#        &#125;</span><br><span class="line">#</span><br><span class="line">#        error_page 404 /404.html;</span><br><span class="line">#            location = /40x.html &#123;</span><br><span class="line">#        &#125;</span><br><span class="line">#</span><br><span class="line">#        error_page 500 502 503 504 /50x.html;</span><br><span class="line">#            location = /50x.html &#123;</span><br><span class="line">#        &#125;</span><br><span class="line">#    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>生成秘钥文件和配置https</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">mkdir /etc/pki/nginx/  /etc/pki/nginx/private -p</span><br><span class="line">openssl genrsa -des3 -out server.key 2048  #会有两次要求输入密码,输入同一个即可</span><br><span class="line">openssl rsa -in server.key -out server.key</span><br><span class="line">openssl req -new -key server.key -out server.csr</span><br><span class="line">openssl req -new -x509 -key server.key -out server.crt -days 3650</span><br><span class="line">openssl req -new -x509 -key server.key -out ca.crt -days 3650</span><br><span class="line">openssl x509 -req -days 3650 -in server.csr -CA ca.crt -CAkey server.key -CAcreateserial -out server.crt</span><br><span class="line"></span><br><span class="line">cp server.crt /etc/pki/nginx/</span><br><span class="line">cp server.key /etc/pki/nginx/private</span><br><span class="line"></span><br><span class="line">启动nginx</span><br><span class="line">systemctl start nginx</span><br></pre></td></tr></table></figure>
-
-<h3 id="创建ecdsa-P256-秘钥和证书"><a href="#创建ecdsa-P256-秘钥和证书" class="headerlink" title="创建ecdsa P256 秘钥和证书"></a>创建ecdsa P256 秘钥和证书</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl req -x509 -sha256 -nodes -days 365 -newkey ec:&lt;(openssl ecparam -name prime256v1) -keyout ecdsa.key -out ecdsa.crt -subj &quot;/C=CN/ST=Beijing/L=Beijing/O=Example Inc./OU=Web Security/CN=example1.com&quot;</span><br></pre></td></tr></table></figure>
-
-<h3 id="https-长连接"><a href="#https-长连接" class="headerlink" title="https 长连接"></a>https 长连接</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -t 32 -c 1000 -d 30 --latency https://$serverIP:443</span><br></pre></td></tr></table></figure>
-
-<h3 id="https-短连接"><a href="#https-短连接" class="headerlink" title="https 短连接"></a>https 短连接</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -t 32 -c 1000 -d 30  -H &#x27;Connection: close&#x27;  --latency https://$serverIP:443</span><br></pre></td></tr></table></figure>
-
-<h2 id="不同-CPU-型号下-Nginx-静态页面的处理能力"><a href="#不同-CPU-型号下-Nginx-静态页面的处理能力" class="headerlink" title="不同 CPU 型号下 Nginx 静态页面的处理能力"></a>不同 CPU 型号下 Nginx 静态页面的处理能力</h2><p>对比不同 CPU 型号下 Nginx 静态页面的处理能力。静态文件下容易出现 同一文件上的 自旋锁（OSQ），null 测试场景表示直接返回，不读取文件</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wrk -t12 -c400 -d30s http://100.81.131.221:18082/index.html //参数可以调整，目标就是将 CPU 压满</span><br></pre></td></tr></table></figure>
-
-<p>软中断在 node0 上，intel E5和 M的对比，在M上访问单个文件锁竞争太激烈，改成请求直接 return 后多核能保持较好的线性能力（下表中 null标识）</p>
-<table>
-<thead>
-<tr>
-<th align="center">CPUs(括号中为core序号)</th>
-<th align="center">E5-2682</th>
-<th>E5-2682 null</th>
-<th>M</th>
-<th align="center">M  null</th>
-<th>AMD 7t83 null</th>
-<th>AMD 7t83</th>
-<th>ft s2500  on null</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">1(0)</td>
-<td align="center">69282&#x2F;61500.77</td>
-<td>118694&#x2F;106825</td>
-<td>74091</td>
-<td align="center">135539&#x2F;192691</td>
-<td>190568</td>
-<td>87190</td>
-<td>35064</td>
-</tr>
-<tr>
-<td align="center">2(1,2)</td>
-<td align="center">130648 us 31%</td>
-<td>233947</td>
-<td>131466</td>
-<td align="center"></td>
-<td>365315</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td align="center">2(1对HT)</td>
-<td align="center">94158 34%</td>
-<td>160114</td>
-<td></td>
-<td align="center"></td>
-<td>217783</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td align="center">4(0-3)</td>
-<td align="center">234884&#x2F;211897</td>
-<td>463033&#x2F;481010</td>
-<td></td>
-<td align="center">499507&#x2F;748880</td>
-<td>730189</td>
-<td>323591</td>
-<td></td>
-</tr>
-<tr>
-<td align="center">8(0-7)</td>
-<td align="center">467658&#x2F;431308</td>
-<td>923348&#x2F;825002</td>
-<td></td>
-<td align="center">1015744&#x2F;1529721</td>
-<td>1442115</td>
-<td>650780</td>
-<td></td>
-</tr>
-<tr>
-<td align="center">8(0-15)</td>
-<td align="center"></td>
-<td>1689722&#x2F;1363031</td>
-<td></td>
-<td align="center">1982448&#x2F;3047778</td>
-<td>2569314</td>
-<td>915399</td>
-<td></td>
-</tr>
-</tbody></table>
-<p>测试说明：</p>
-<ul>
-<li>压测要将多个核打满，有时候因为软中断的挤占会导致部分核打不满</li>
-<li>要考虑软中断对CPU使用的挤占&#x2F;以及软中断跨node的影响</li>
-<li>测试结果两组数字的话，前者为nginx、软中断分别在不同的node</li>
-<li>E5&#x2F;M 软中断绑 node1，测试结果的两组数据表示软中断和nginx跨node和同node（同 node时软中断和nginx尽量错开）</li>
-<li>null 指的是 nginx 直接返回 200，不从文件读取html，保证没有文件锁</li>
-<li>AMD 软中断总是能跟着绑核的nginx进程跑</li>
-<li>压测要将多个核打满，有时候因为软中断的挤占会导致部分核打不满</li>
-</ul>
-<p>M是裸金属ECS，moc卡插在Die1上，所以软中断默认绑在 Die1 上，测试强行将软中断绑定到 Die0 实际测试结果和绑定在 Die1 性能一样，猜测改了驱动将网络包的描述符没有按硬件绑死而是跟软中断就近分配。</p>
-<h2 id="sendfile-和-tcp-nopush"><a href="#sendfile-和-tcp-nopush" class="headerlink" title="sendfile 和 tcp_nopush"></a>sendfile 和 tcp_nopush</h2><h3 id="tcp-nopush-对性能的影响"><a href="#tcp-nopush-对性能的影响" class="headerlink" title="tcp_nopush 对性能的影响"></a>tcp_nopush 对性能的影响</h3><p>M上，返回很小的 html页面，如果 tcp_nopush&#x3D;on 性能能有20%的提升，并且开启后 si% 使用率从10%降到了0. Tcp_nodelay&#x3D;on 就基本对性能没啥影响</p>
-<blockquote>
-<p>TCP_NOPUSH 是 FreeBSD 的一个 socket 选项，对应 Linux 的 TCP_CORK，Nginx 里统一用 <code>tcp_nopush</code> 来控制它。启用它之后，数据包会累计到一定大小之后才会发送，减小了额外开销，提高网络效率。</p>
-<p>To keep everything logical, Nginx tcp_nopush activates the TCP_CORK option in the Linux TCP stack since the TCP_NOPUSH one exists on FreeBSD only.</p>
-</blockquote>
-<p>nginx on M 8核，http 长连接，访问极小的静态页面（AMD 上测试也是 sendfile off 性能要好30%左右）</p>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>tcp_nopush on</th>
-<th>tcp_nopush off</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>sendfile on</td>
-<td>46万(PPS 44万)</td>
-<td>37万（PPS 73万）</td>
-</tr>
-<tr>
-<td>sendfile off</td>
-<td>49万(PPS 48万)</td>
-<td>49万（PPS 48万)</td>
-</tr>
-</tbody></table>
-<p>问题：为什么 sendfile off 性能反而好？（PPS 明显低了）</p>
-<p>答：一次请求Nginx要回复header+body, header在用户态内存，body走sendfile在内核态内存，nginx没有机会合并header+body, sendfile on后导致每次请求要回复两个tcp包。而 sendfile off的时候虽然有用户态内核态切换、copy，但是有机会把 header&#x2F;body 合并成一个tcp包</p>
-<p>从抓包来看，sendfile on的时候每次 http get都是回复两个包：1) http 包头（len：288）2）http body(len: 58) </p>
-<p><img src="/images/951413iMgBlog/image-20221008100922349.png" alt="image-20221008100922349"></p>
-<p>sendfile off的时候每次 http get都是回复一个包： http 包头+body（len：292&#x3D;288+4）</p>
-<p><img src="/images/951413iMgBlog/image-20221008100808480.png" alt="image-20221008100808480"></p>
-<p>在这个小包场景，如果sendfile&#x3D;off 后，回包在http层面就已经合并从1个了，导致内核没机会再次 cork（合并包）；如果sendfile&#x3D;on 则是每次请求回复两个tcp包，如果设置了  nopush 会在内核层面合并一次。</p>
-<p>如果不是访问磁盘上的静态页面，而是直接 return某个内存的内容的话，sendfile on&#x2F;off 对性能没有影响，原理也如上，不需要访问磁盘，也就没有机会分两个包发送包头和body了。</p>
-<h3 id="分析参考数据"><a href="#分析参考数据" class="headerlink" title="分析参考数据"></a>分析参考数据</h3><p>以下数据都是变换不同的 sendfile、tcp_nopush等组合来观察QPS、setsockopt、PPS来分析这些参数起了什么作用</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">//tcp_nopush off; QPS 37万  很明显 pps 比46万高了将近1倍，这是因为 tcp_cork 合并了小包</span><br><span class="line">//nginx 创建连接设置的 sock opt</span><br><span class="line">#cat strace.log.88206</span><br><span class="line">08:31:19.632581 setsockopt(3, SOL_TCP, TCP_NODELAY, [1], 4) = 0 &lt;0.000013&gt;</span><br><span class="line"></span><br><span class="line">#tsar --traffic --live -i1</span><br><span class="line">Time              ---------------------traffic--------------------</span><br><span class="line">Time               bytin  bytout   pktin  pktout  pkterr  pktdrp</span><br><span class="line">30/09/22-07:00:22  52.9M  122.8M  748.2K  726.8K    0.00    0.00</span><br><span class="line">30/09/22-07:00:23  52.9M  122.7M  748.1K  726.2K    0.00    0.00</span><br><span class="line">30/09/22-07:00:24  53.0M  122.9M  749.2K  727.2K    0.00    0.00</span><br><span class="line">30/09/22-07:00:25  53.0M  122.8M  749.3K  726.6K    0.00    0.00</span><br><span class="line">30/09/22-07:00:26  52.9M  122.8M  748.2K  727.1K    0.00    0.00</span><br><span class="line">30/09/22-07:00:27  53.1M  123.0M  750.5K  728.0K    0.00    0.00</span><br><span class="line"></span><br><span class="line">//tcp_nopush      on; QPS 46万</span><br><span class="line">#tsar --traffic --live -i1</span><br><span class="line">Time              ---------------------traffic--------------------</span><br><span class="line">Time               bytin  bytout   pktin  pktout  pkterr  pktdrp</span><br><span class="line">30/09/22-07:00:54  40.2M  127.6M  447.6K  447.6K    0.00    0.00</span><br><span class="line">30/09/22-07:00:55  40.2M  127.5M  447.1K  447.1K    0.00    0.00</span><br><span class="line">30/09/22-07:00:56  40.1M  127.4M  446.8K  446.8K    0.00    0.00</span><br><span class="line"></span><br><span class="line">//sendfile on ,tcp_nopush on, quickack on; QPS 46万</span><br><span class="line">#ip route change 172.16.0.0/24 dev eth0 quickack 1</span><br><span class="line"></span><br><span class="line">#ip route</span><br><span class="line">default via 172.16.0.253 dev eth0</span><br><span class="line">169.254.0.0/16 dev eth0 scope link metric 1002</span><br><span class="line">172.16.0.0/24 dev eth0 scope link quickack 1</span><br><span class="line">192.168.5.0/24 dev docker0 proto kernel scope link src 192.168.5.1</span><br><span class="line"></span><br><span class="line">//nginx 创建连接设置的 sock opt </span><br><span class="line">#cat strace.log.85937</span><br><span class="line">08:27:44.702111 setsockopt(3, SOL_TCP, TCP_CORK, [1], 4) = 0 &lt;0.000011&gt;</span><br><span class="line">08:27:44.702353 setsockopt(3, SOL_TCP, TCP_CORK, [0], 4) = 0 &lt;0.000013&gt;</span><br><span class="line"></span><br><span class="line">#tsar --traffic -i1 --live</span><br><span class="line">Time              ---------------------traffic--------------------</span><br><span class="line">Time               bytin  bytout   pktin  pktout  pkterr  pktdrp</span><br><span class="line">08/10/22-03:27:23  40.7M  152.9M  452.6K  905.2K    0.00    0.00</span><br><span class="line">08/10/22-03:27:24  40.7M  152.9M  452.6K  905.2K    0.00    0.00</span><br><span class="line">08/10/22-03:27:25  40.6M  152.8M  452.3K  904.5K    0.00    0.00</span><br><span class="line">08/10/22-03:27:26  40.6M  152.7M  452.1K  904.1K    0.00    0.00</span><br><span class="line">08/10/22-03:27:27  40.6M  152.7M  452.0K  904.0K    0.00    0.00</span><br><span class="line">08/10/22-03:27:28  40.7M  153.1M  453.2K  906.5K    0.00    0.00</span><br><span class="line"></span><br><span class="line">//sendfile on , quickack on; QPS 42万</span><br><span class="line">#tsar --traffic -i1 --live</span><br><span class="line">Time              ---------------------traffic--------------------</span><br><span class="line">Time               bytin  bytout   pktin  pktout  pkterr  pktdrp</span><br><span class="line">08/10/22-04:02:53  57.9M  158.7M  812.3K    1.2M    0.00    0.00</span><br><span class="line">08/10/22-04:02:54  58.3M  159.6M  817.3K    1.2M    0.00    0.00</span><br><span class="line">08/10/22-04:02:55  58.2M  159.4M  816.0K    1.2M    0.00    0.00</span><br></pre></td></tr></table></figure>
-
-<p><a target="_blank" rel="noopener" href="https://thoughts.t37.net/nginx-optimization-understanding-sendfile-tcp-nodelay-and-tcp-nopush-c55cdd276765">This behavior is confirmed in a comment from the TCP stack source about TCP_CORK</a>:</p>
-<blockquote>
-<p>When set indicates to always queue non-full frames. Later the user clears this option and we transmit any pending partial frames in the queue. This is meant to be used alongside sendfile() to get properly filled frames when the user (for example) must write out headers with a write() call first and then use sendfile to send out the data parts. TCP_CORK can be set together with TCP_NODELAY and it is stronger than TCP_NODELAY.</p>
-</blockquote>
-<h3 id="perf-top-数据"><a href="#perf-top-数据" class="headerlink" title="perf top 数据"></a>perf top 数据</h3><p>以下都是 sendfile on的时候变换 tcp_nopush 参数得到的不同 perf 数据</p>
-<p>tcp_nopush&#x3D;off：(QPS 37万)</p>
-<p><img src="/images/951413iMgBlog/image-20220930143920567.png" alt="image-20220930143920567"></p>
-<p>tcp_nopush&#x3D;on：(QPS 46万)</p>
-<p><img src="/images/951413iMgBlog/image-20220930143419304.png" alt="image-20220930143419304"></p>
-<p>对比一下，在sendfile on的时候，用不同的push 参数对应的 tcp 栈</p>
-<p><img src="/images/951413iMgBlog/image-20221009093842151.png" alt="image-20221009093842151"></p>
-<h2 id="Nginx-在16核后再增加核数性能提升很少的分析"><a href="#Nginx-在16核后再增加核数性能提升很少的分析" class="headerlink" title="Nginx 在16核后再增加核数性能提升很少的分析"></a>Nginx 在16核后再增加核数性能提升很少的分析</h2><p>16核 perf top</p>
-<p><img src="/images/951413iMgBlog/image-20220916174106821.png" alt="image-20220916174106821"></p>
-<p>32核 perf top</p>
-<p><img src="/images/951413iMgBlog/image-20220916174234039.png" alt="image-20220916174234039"></p>
-<p>从以上两个perf top 对比可以看到内核锁消耗增加非常明显</p>
-<p>这是因为<a target="_blank" rel="noopener" href="https://www.cnblogs.com/LoyenWang/p/12826811.html">读写文件锁 osq_lock</a> ，比如nginx需要写日志访问 access.log，需要加锁</p>
-<p><code>osq(optimistci spinning queue)</code>是基于MCS算法的一个具体实现，osq_lock 是Linux 中对MCS的实现</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">        return 200 &#x27;&lt;!DOCTYPE html&gt;&lt;h2&gt;null!&lt;/h2&gt;\n&#x27;; #直接内存返回，不读磁盘文件，避免文件锁</span><br><span class="line">        # because default content-type is application/octet-stream,</span><br><span class="line">    		# browser will offer to &quot;save the file&quot;...</span><br><span class="line">    		# if you want to see reply in browser, uncomment next line </span><br><span class="line">    		# add_header Content-Type text/plain;</span><br><span class="line">        root   /usr/share/nginx/html;</span><br><span class="line">        index  index.html index.htm;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<h3 id="ARM下这个瓶颈更明显"><a href="#ARM下这个瓶颈更明显" class="headerlink" title="ARM下这个瓶颈更明显"></a>ARM下这个瓶颈更明显</h3><p>M上用40-64 core 并发的时候 perf top都是如下图，40 core以上网络瓶颈，pps 达到620万（离ECS规格承诺的1200万还很远），CPU压不起来了</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">#tsar --traffic -i1 --live</span><br><span class="line">Time              ---------------------traffic--------------------</span><br><span class="line">Time               bytin  bytout   pktin  pktout  pkterr  pktdrp</span><br><span class="line">16/09/22-12:41:07 289.4M  682.8M    3.2M    3.2M    0.00    0.00</span><br><span class="line">16/09/22-12:41:08 285.5M  674.4M    3.1M    3.1M    0.00    0.00</span><br><span class="line">16/09/22-12:41:09 285.0M  672.6M    3.1M    3.1M    0.00    0.00</span><br><span class="line">16/09/22-12:41:10 287.5M  678.3M    3.1M    3.1M    0.00    0.00</span><br><span class="line">16/09/22-12:41:11 289.2M  682.0M    3.2M    3.2M    0.00    0.00</span><br><span class="line">16/09/22-12:41:12 290.1M  685.1M    3.2M    3.2M    0.00    0.00</span><br><span class="line">16/09/22-12:41:13 288.3M  680.4M    3.1M    3.1M    0.00    0.00</span><br><span class="line"></span><br><span class="line">#ethtool -l eth0</span><br><span class="line">Channel parameters for eth0:</span><br><span class="line">Pre-set maximums:</span><br><span class="line">RX:		0</span><br><span class="line">TX:		0</span><br><span class="line">Other:		0</span><br><span class="line">Combined:	32  //所以用不满64 core，依据上面的测试数据推算64队列的话那么基本可以跑到1200万pps</span><br><span class="line">Current hardware settings:</span><br><span class="line">RX:		0</span><br><span class="line">TX:		0</span><br><span class="line">Other:		0</span><br><span class="line">Combined:	32</span><br></pre></td></tr></table></figure>
-
-<p><img src="/images/951413iMgBlog/image-20220916202347245.png" alt="image-20220916202347245"></p>
-<h3 id="文件锁的竞争"><a href="#文件锁的竞争" class="headerlink" title="文件锁的竞争"></a>文件锁的竞争</h3><p>Nginx 在M 上使用 16 core的时候完全压不起来，都是内核态锁竞争，16core QPS 不到23万，线性能力很差（单核68000）</p>
-<p>从下图可以看到 sys 偏高，真正用于 us 的 CPU 太少，而内核态 CPU 消耗过高的是 osq_lock(写日志文件锁相关)</p>
-<p><img src="/images/951413iMgBlog/image-20220916151006533.png" alt="image-20220916151006533"></p>
-<p><img src="/images/951413iMgBlog/image-20220916151310488.png" alt="image-20220916151310488"></p>
-<p><img src="/images/951413iMgBlog/1663329200304-4f4b615b-8507-47c8-87ff-7e92939f12bc.png" alt="img"></p>
-<p><img src="/images/951413iMgBlog/image-20220916151613388.png" alt="image-20220916151613388"></p>
-<p>16核对应的perf状态</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Performance counter stats for process id &#x27;49643&#x27;:</span><br><span class="line"></span><br><span class="line">      2479.448740      task-clock (msec)         #    0.994 CPUs utilized</span><br><span class="line">              233      context-switches          #    0.094 K/sec</span><br><span class="line">                0      cpu-migrations            #    0.000 K/sec</span><br><span class="line">                0      page-faults               #    0.000 K/sec</span><br><span class="line">    3,389,330,461      cycles                    #    1.367 GHz</span><br><span class="line">    1,045,248,301      stalled-cycles-frontend   #   30.84% frontend cycles idle</span><br><span class="line">    1,378,321,174      stalled-cycles-backend    #   40.67% backend  cycles idle</span><br><span class="line">    3,877,095,782      instructions              #    1.14  insns per cycle</span><br><span class="line">                                                 #    0.36  stalled cycles per insn</span><br><span class="line">  &lt;not supported&gt;      branches</span><br><span class="line">        2,128,918      branch-misses             #    0.00% of all branches</span><br><span class="line"></span><br><span class="line">      2.493168013 seconds time elapsed</span><br></pre></td></tr></table></figure>
-
-<h2 id="软中断和-nginx-所在-node-关系"><a href="#软中断和-nginx-所在-node-关系" class="headerlink" title="软中断和 nginx 所在 node 关系"></a>软中断和 nginx 所在 node 关系</h2><p>以下两种情况的软中断都绑在 32-47 core上</p>
-<p>软中断和 nginx 在同一个node，这时基本看不到多少 si% </p>
-<p><img src="/images/951413iMgBlog/image-20220919180725510.png" alt="image-20220919180725510"></p>
-<p><img src="/images/951413iMgBlog/image-20220919180758887.png" alt="image-20220919180758887"></p>
-<p>软中断和 nginx 跨node（性能相当于同node的70-80%）, 软中断几乎快打满 8 个核了，同时性能还差</p>
-<p><img src="/images/951413iMgBlog/image-20220919180916190.png" alt="image-20220919180916190"></p>
-<h3 id="网络描述符、数据缓冲区，设备的关系"><a href="#网络描述符、数据缓冲区，设备的关系" class="headerlink" title="网络描述符、数据缓冲区，设备的关系"></a>网络描述符、数据缓冲区，设备的关系</h3><p>网络描述符的内存分配跟着设备走（设备插在哪个node 就就近在本 node 分配描述符的内存）， 数据缓冲区内存跟着队列(中断)走， 如果队列绑定到DIE0， 而设备在DIE1上，这样在做DMA通信时， 会产生跨 DIE 的交织访问.</p>
-<h2 id="Nginx处理HTTP的生命周期"><a href="#Nginx处理HTTP的生命周期" class="headerlink" title="Nginx处理HTTP的生命周期"></a><strong>Nginx处理HTTP的生命周期</strong></h2><p>Nginx将HTTP处理分成了11个阶段。下面的阶段，按顺序执行</p>
-<table>
-<thead>
-<tr>
-<th><strong>阶段名称</strong></th>
-<th><strong>阶段作用</strong></th>
-<th><strong>涉及的模块Moduel</strong></th>
-<th><strong>Moduel作用</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>POST_READ</td>
-<td>接收到完整的http头部后处理的阶段，在uri重写之前。一般跳过</td>
-<td>realip</td>
-<td>读取客户端真实IP信息，用于限流等</td>
-</tr>
-<tr>
-<td>SERVER_RERITE</td>
-<td>location匹配前，修改uri的阶段，用于重定向，location块外的重写指令（多次执行）</td>
-<td>rewrite</td>
-<td>重定向</td>
-</tr>
-<tr>
-<td>FIND_CONFIG</td>
-<td>uri寻找匹配的location块配置项（多次执行）</td>
-<td>find_config</td>
-<td>根据URI寻找匹配的localtion块配置</td>
-</tr>
-<tr>
-<td>REWRITE</td>
-<td>找到location块后再修改uri，location级别的uri重写阶段（多次执行）</td>
-<td>rewrite</td>
-<td>重定向</td>
-</tr>
-<tr>
-<td>POST_WRITE</td>
-<td>防死循环，跳转到对应阶段</td>
-<td>&#x2F;</td>
-<td>&#x2F;</td>
-</tr>
-<tr>
-<td>PREACCESS</td>
-<td>权限预处理</td>
-<td>limt_conn</td>
-<td>限制处理请求的速率，还可以设置桶的大小，是否延迟等参数</td>
-</tr>
-<tr>
-<td>limit_req</td>
-<td>限制连接和请求数</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>ACCESS</td>
-<td>判断是否允许这个请求进入</td>
-<td>auth_basic</td>
-<td>实现简单的用户名、密码登录</td>
-</tr>
-<tr>
-<td>access</td>
-<td>支持配置allow\deny等指令</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>auth_request</td>
-<td>将请求转发到第三方认证服务器上</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>POST_ACCESS</td>
-<td>向用户发送拒绝服务的错误码，用来响应上一阶段的拒绝</td>
-<td>&#x2F;</td>
-<td>&#x2F;</td>
-</tr>
-<tr>
-<td>PRECONTENT</td>
-<td>服务器响应内容之前向响应内容添加一些额外的内容。</td>
-<td>try_files</td>
-<td>匹配配置的多个url地址</td>
-</tr>
-<tr>
-<td>mirrors</td>
-<td>复制一个相同的子请求，例如生产流量复制</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>CONTENT</td>
-<td>内容生成阶段，该阶段产生响应，并发送到客户端</td>
-<td>concat</td>
-<td>如果访问多个小文件，可在一次请求上返回多个小文件内容</td>
-</tr>
-<tr>
-<td>random_index，index, auto_index</td>
-<td>显示location下目录或目录下的index.html文件的配置</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>static</td>
-<td>通过absolute_redirect等指令设置重定向的Location等</td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td>LOG</td>
-<td>记录访问日志</td>
-<td>log</td>
-<td>配置日志格式，存储位置等</td>
-</tr>
-</tbody></table>
-<p>也可以通过源码ngx_module.c 中，查看到ngx_module_name，其中包含了在编译 Nginx 的时候的 with 指令所包含的所有模块，它们之间的顺序非常关键，在数组中顺序是相反的。</p>
-<p><img src="/images/951413iMgBlog/image-20231117103535342.png" alt="image-20231117103535342"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>要考虑软中断、以及网卡软中断队列数量对性能的影响</p>
-<p>sendfile不一定导致性能变好了</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>完善的Nginx在AWS Graviton上的测试报告<a target="_blank" rel="noopener" href="https://armkeil.blob.core.windows.net/developer/Files/pdf/white-paper/guidelines-for-deploying-nginx-plus-on-aws.pdf">https://armkeil.blob.core.windows.net/developer/Files/pdf/white-paper/guidelines-for-deploying-nginx-plus-on-aws.pdf</a></p>
 
       
     </div>

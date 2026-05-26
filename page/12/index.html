@@ -140,7 +140,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">206</span>
+          <span class="site-state-item-count">207</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -151,7 +151,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">310</span>
+        <span class="site-state-item-count">311</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -168,6 +168,216 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2020/08/31/kubernetes%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="twitter @plantegg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="plantegg">
+      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | plantegg">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/08/31/kubernetes%E5%AE%B9%E5%99%A8%E7%BD%91%E7%BB%9C/" class="post-title-link" itemprop="url">kubernetes容器网络</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-08-31 11:30:03" itemprop="dateCreated datePublished" datetime="2020-08-31T11:30:03+08:00">2020-08-31</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2025-11-16 19:58:49" itemprop="dateModified" datetime="2025-11-16T19:58:49+08:00">2025-11-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="kubernetes-容器网络"><a href="#kubernetes-容器网络" class="headerlink" title="kubernetes 容器网络"></a>kubernetes 容器网络</h1><h2 id="cni-网络"><a href="#cni-网络" class="headerlink" title="cni 网络"></a>cni 网络</h2><blockquote>
+<p> <strong>cni0</strong> is a Linux network bridge device, all <strong>veth</strong> devices will connect to this bridge, so all Pods on the same node can communicate with each other, as explained in <strong>Kubernetes Network Model</strong> and the hotel analogy above.</p>
+</blockquote>
+<h3 id="cni（Container-Network-Interface）"><a href="#cni（Container-Network-Interface）" class="headerlink" title="cni（Container Network Interface）"></a>cni（Container Network Interface）</h3><p>CNI 全称为 Container Network Interface，是用来定义容器网络的一个 <a target="_blank" rel="noopener" href="https://github.com/containernetworking/cni/blob/master/SPEC.md">规范</a>。<a target="_blank" rel="noopener" href="https://github.com/containernetworking/cni">containernetworking&#x2F;cni</a> 是一个 CNCF 的 CNI 实现项目，包括基本额 bridge,macvlan等基本网络插件。</p>
+<p>一般将cni各种网络插件的可执行文件二进制放到 <code>/opt/cni/bin</code> ，在 <code>/etc/cni/net.d/</code> 下创建配置文件，剩下的就交给 K8s 或者 containerd 了，我们不关心也不了解其实现。</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">#ls -lh /opt/cni/bin/</span><br><span class="line">总用量 90M</span><br><span class="line">-rwxr-x--- 1 root root 4.0M 12月 23 09:39 bandwidth</span><br><span class="line">-rwxr-x--- 1 root root  35M 12月 23 09:39 calico</span><br><span class="line">-rwxr-x--- 1 root root  35M 12月 23 09:39 calico-ipam</span><br><span class="line">-rwxr-x--- 1 root root 3.0M 12月 23 09:39 flannel</span><br><span class="line">-rwxr-x--- 1 root root 3.5M 12月 23 09:39 host-local</span><br><span class="line">-rwxr-x--- 1 root root 3.1M 12月 23 09:39 loopback</span><br><span class="line">-rwxr-x--- 1 root root 3.8M 12月 23 09:39 portmap</span><br><span class="line">-rwxr-x--- 1 root root 3.3M 12月 23 09:39 tuning</span><br><span class="line"></span><br><span class="line">[root@hygon3 15:55 /root]</span><br><span class="line">#ls -lh /etc/cni/net.d/</span><br><span class="line">总用量 12K</span><br><span class="line">-rw-r--r-- 1 root root  607 12月 23 09:39 10-calico.conflist</span><br><span class="line">-rw-r----- 1 root root  292 12月 23 09:47 10-flannel.conflist</span><br><span class="line">-rw------- 1 root root 2.6K 12月 23 09:39 calico-kubeconfig</span><br></pre></td></tr></table></figure>
+
+<p>CNI 插件都是直接通过 exec 的方式调用，而不是通过 socket 这样 C&#x2F;S 方式，所有参数都是通过环境变量、标准输入输出来实现的。</p>
+<p>Step-by-step communication from <strong>Pod 1</strong> to <strong>Pod 6</strong>:</p>
+<ol>
+<li><em>Package leaves</em> *<strong>Pod 1 netns*</strong> <em>through the</em> *<strong>eth1*</strong> <em>interface and reaches the</em> <em><strong>root netns*</strong> <em>through the virtual interface</em> <em><strong>veth1*</strong></em>;</em></li>
+<li><em>Package leaves</em> <em><strong>veth1*</strong> <em>and reaches</em> <em><strong>cni0*</strong></em>, looking for</em> <em><strong>Pod 6*</strong></em>’s* <em>address;</em></li>
+<li><em>Package leaves</em> <em><strong>cni0*</strong> <em>and is redirected to</em> <em><strong>eth0*</strong></em>;</em></li>
+<li><em>Package leaves</em> *<strong>eth0*</strong> <em>from</em> <em><strong>Master 1*</strong> <em>and reaches the</em> <em><strong>gateway*</strong></em>;</em></li>
+<li><em>Package leaves the</em> *<strong>gateway*</strong> <em>and reaches the</em> *<strong>root netns*</strong> <em>through the</em> <em><strong>eth0*</strong> <em>interface on</em> <em><strong>Worker 1*</strong></em>;</em></li>
+<li><em>Package leaves</em> <em><strong>eth0*</strong> <em>and reaches</em> <em><strong>cni0*</strong></em>, looking for</em> <em><strong>Pod 6*</strong></em>’s* <em>address;</em></li>
+<li><em>Package leaves</em> *<strong>cni0*</strong> <em>and is redirected to the</em> *<strong>veth6*</strong> <em>virtual interface;</em></li>
+<li><em>Package leaves the</em> *<strong>root netns*</strong> <em>through</em> *<strong>veth6*</strong> <em>and reaches the</em> *<strong>Pod 6 netns*</strong> <em>though the</em> *<strong>eth6*</strong> <em>interface;</em></li>
+</ol>
+<p><img src="/images/951413iMgBlog/image-20220115124747936.png" alt="image-20220115124747936"></p>
+<h2 id="flannel-网络"><a href="#flannel-网络" class="headerlink" title="flannel 网络"></a>flannel 网络</h2><p>假如POD1访问POD4：</p>
+<ol>
+<li>从POD1中出来的包先到Bridge cni0上（因为POD1对应的veth挂在了cni0上）</li>
+<li>然后进入到宿主机网络，宿主机有路由 10.244.2.0&#x2F;24 via 10.244.2.0 dev flannel.1 onlink ，也就是目标ip 10.244.2.3的包交由 flannel.1 来处理</li>
+<li>flanneld 进程将包封装成vxlan 丢到eth0从宿主机1离开（封装后的目标ip是192.168.2.91）</li>
+<li>这个封装后的vxlan udp包正确路由到宿主机2</li>
+<li>然后经由 flanneld 解包成 10.244.2.3 ，命中宿主机2上的路由：10.244.2.0&#x2F;24 dev cni0 proto kernel scope link src 10.244.2.1 ，交给cni0（<strong>这里会过宿主机iptables</strong>）</li>
+<li>cni0将包送给POD4</li>
+</ol>
+<p><img src="/images/951413iMgBlog/image-20220115132938290.png" alt="image-20220115132938290"></p>
+<p>对应宿主机查询到的ip、路由信息（和上图不是对应的）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">#ip -d -4 addr show cni0</span><br><span class="line">475: cni0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1450 qdisc noqueue state UP group default qlen 1000</span><br><span class="line">    link/ether 8e:34:ba:e2:a4:c6 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 68 maxmtu 65535</span><br><span class="line">    bridge forward_delay 1500 hello_time 200 max_age 2000 ageing_time 30000 stp_state 0 priority 32768 vlan_filtering 0 vlan_protocol 802.1Q bridge_id 8000.8e:34:ba:e2:a4:c6 designated_root 8000.8e:34:ba:e2:a4:c6 root_port 0 root_path_cost 0 topology_change 0 topology_change_detected 0 hello_timer    0.00 tcn_timer    0.00 topology_change_timer    0.00 gc_timer  161.46 vlan_default_pvid 1 vlan_stats_enabled 0 group_fwd_mask 0 group_address 01:80:c2:00:00:00 mcast_snooping 1 mcast_router 1 mcast_query_use_ifaddr 0 mcast_querier 0 mcast_hash_elasticity 4 mcast_hash_max 512 mcast_last_member_count 2 mcast_startup_query_count 2 mcast_last_member_interval 100 mcast_membership_interval 26000 mcast_querier_interval 25500 mcast_query_interval 12500 mcast_query_response_interval 1000 mcast_startup_query_interval 3124 mcast_stats_enabled 0 mcast_igmp_version 2 mcast_mld_version 1 nf_call_iptables 0 nf_call_ip6tables 0 nf_call_arptables 0 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535</span><br><span class="line">    inet 192.168.3.1/24 brd 192.168.3.255 scope global cni0</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line"></span><br><span class="line">#ip -d -4 addr show flannel.1</span><br><span class="line">474: flannel.1: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1450 qdisc noqueue state UNKNOWN group default</span><br><span class="line">    link/ether fe:49:64:ae:36:af brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 68 maxmtu 65535</span><br><span class="line">    vxlan id 1 local 10.133.2.252 dev bond0 srcport 0 0 dstport 8472 nolearning ttl auto ageing 300 udpcsum noudp6zerocsumtx noudp6zerocsumrx numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535</span><br><span class="line">    inet 192.168.3.0/32 brd 192.168.3.0 scope global flannel.1</span><br><span class="line">       valid_lft forever preferred_lft forever</span><br><span class="line">       </span><br><span class="line">[root@hygon239 20:06 /root]</span><br><span class="line">#kubectl describe node hygon252 | grep -C5 -i vtep  //可以看到VetpMAC 以及对应的宿主机IP（vxlan封包后的IP）</span><br><span class="line">Labels:             beta.kubernetes.io/arch=amd64</span><br><span class="line">                    beta.kubernetes.io/os=linux</span><br><span class="line">                    kubernetes.io/arch=amd64</span><br><span class="line">                    kubernetes.io/hostname=hygon252</span><br><span class="line">                    kubernetes.io/os=linux</span><br><span class="line">Annotations:        flannel.alpha.coreos.com/backend-data: &#123;&quot;VNI&quot;:1,&quot;VtepMAC&quot;:&quot;fe:49:64:ae:36:af&quot;&#125;</span><br><span class="line">                    flannel.alpha.coreos.com/backend-type: vxlan</span><br><span class="line">                    flannel.alpha.coreos.com/kube-subnet-manager: true</span><br><span class="line">                    flannel.alpha.coreos.com/public-ip: 10.133.2.252</span><br><span class="line">                    kubeadm.alpha.kubernetes.io/cri-socket: /var/run/dockershim.sock</span><br><span class="line">                    node.alpha.kubernetes.io/ttl: 0       </span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/951413iMgBlog/image-20220115133500854.png" alt="image-20220115133500854"></p>
+<h2 id="kubernetes-calico-网络"><a href="#kubernetes-calico-网络" class="headerlink" title="kubernetes calico 网络"></a>kubernetes calico 网络</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml</span><br><span class="line"></span><br><span class="line">#或者老版本的calico</span><br><span class="line">curl https://docs.projectcalico.org/v3.15/manifests/calico.yaml -o calico.yaml</span><br></pre></td></tr></table></figure>
+
+<p>默认calico用的是ipip封包（这个性能跟原生网络差多少有待验证，本质也是overlay网络，比flannel那种要好很多吗？）</p>
+<p>跨宿主机的两个容器之间的流量链路是：</p>
+<blockquote>
+<p>cali-容器eth0-&gt;宿主机cali27dce37c0e8-&gt;tunl0-&gt;内核ipip模块封包-&gt;物理网卡（ipip封包后）—远程–&gt; 物理网卡-&gt;内核ipip模块解包-&gt;tunl0-&gt;cali-容器</p>
+</blockquote>
+<p><img src="/images/oss/a1767a5f2cbc2c48c1a35da9f3232a2c.png" alt="image.png"></p>
+<p>Calico IPIP模式对物理网络无侵入，符合云原生容器网络要求；使用IPIP封包，性能略低于Calico BGP模式；无法使用传统防火墙管理、也无法和存量网络直接打通。Pod在Node做SNAT访问外部，Pod流量不易被监控。</p>
+<h2 id="calico-ipip网络不通"><a href="#calico-ipip网络不通" class="headerlink" title="calico ipip网络不通"></a>calico ipip网络不通</h2><p>集群有五台机器192.168.0.110-114, 同时每个node都有另外一个ip：192.168.3.110-114，部分节点之间不通。每台机器部署好calico网络后，会分配一个 &#x2F;26 CIRD 子网（64个ip）。</p>
+<h3 id="案例1"><a href="#案例1" class="headerlink" title="案例1"></a>案例1</h3><p>目标机是10.122.127.128（宿主机ip 192.168.3.112），如果从10.122.17.64（宿主机ip 192.168.3.110） ping 10.122.127.128不通，查看10.122.127.128路由表：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@az3-k8s-13 ~]# ip route |grep tunl0</span><br><span class="line">10.122.17.64/26 via 10.122.127.128 dev tunl0  //这条路由不通</span><br><span class="line">[root@az3-k8s-13 ~]# ip route del 10.122.17.64/26 via 10.122.127.128 dev tunl0 ; ip route add 10.122.17.64/26 via 192.168.3.110 dev tunl0 proto bird onlink</span><br><span class="line"></span><br><span class="line">[root@az3-k8s-13 ~]# ip route |grep tunl0</span><br><span class="line">10.122.17.64/26 via 192.168.3.110 dev tunl0 proto bird onlink //这样就通了 </span><br></pre></td></tr></table></figure>
+
+<p>在10.122.127.128抓包如下，明显可以看到icmp request到了 tunl0网卡，tunl0网卡也回复了，但是回复包没有经过kernel ipip模块封装后发到eth1上：</p>
+<p><img src="/images/oss/d3111417ce646ca1475def5bea01e6b9.png" alt="image.png"></p>
+<p>正常机器应该是这样，上图不正常的时候缺少红框中的reply：</p>
+<p><img src="/images/oss/9ea9041af1211b2a5b8de4e216044465.png" alt="image.png"></p>
+<p>解决：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip route del 10.122.17.64/26 via 10.122.127.128 dev tunl0 ; </span><br><span class="line">ip route add 10.122.17.64/26 via 192.168.3.110 dev tunl0 proto bird onlink</span><br></pre></td></tr></table></figure>
+
+<p>删除错误路由增加新的路由就可以了，新增路由的意思是从tunl0发给10.122.17.64&#x2F;26的包下一跳是 192.168.3.110。</p>
+<p> via 192.168.3.110 表示下一跳的ip</p>
+<p>onlink参数的作用：<br>使用这个参数将会告诉内核，不必检查网关是否可达。因为在linux内核中，网关与本地的网段不同是被认为不可达的，从而拒绝执行添加路由的操作。</p>
+<p>因为tunl0网卡ip的 CIDR 是32，也就是不属于任何子网，那么这个网卡上的路由没有网关，配置路由的话必须是onlink, 内核存也没法根据子网来选择到这块网卡，所以还会加上 dev 指定网卡。</p>
+<h3 id="案例2"><a href="#案例2" class="headerlink" title="案例2"></a>案例2</h3><p>集群有五台机器192.168.0.110-114, 同时每个node都有另外一个ip：192.168.3.110-114，只有node2没有192.168.3.111这个ip，结果node2跟其他节点都不通：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">#calicoctl node status</span><br><span class="line">Calico process is running.</span><br><span class="line"></span><br><span class="line">IPv4 BGP status</span><br><span class="line">+---------------+-------------------+-------+------------+-------------+</span><br><span class="line">| PEER ADDRESS  |     PEER TYPE     | STATE |   SINCE    |    INFO     |</span><br><span class="line">+---------------+-------------------+-------+------------+-------------+</span><br><span class="line">| 192.168.0.111 | node-to-node mesh | up    | 2020-08-29 | Established |</span><br><span class="line">| 192.168.3.112 | node-to-node mesh | up    | 2020-08-29 | Established |</span><br><span class="line">| 192.168.3.113 | node-to-node mesh | up    | 2020-08-29 | Established |</span><br><span class="line">| 192.168.3.114 | node-to-node mesh | up    | 2020-08-29 | Established |</span><br><span class="line">+---------------+-------------------+-------+------------+-------------+</span><br></pre></td></tr></table></figure>
+
+<p>从node4 ping node2，然后在node2上抓包，可以看到 icmp request都发到了node2上，但是node2收到后没有发给tunl0：</p>
+<p><img src="/images/oss/16fda9322e9a59c37c11629acc611bf3.png" alt="image.png"></p>
+<p>所以icmp没有回复，这里的问题在于<strong>kernel收到包后为什么不给tunl0</strong></p>
+<p>同样，在node2上ping node4，同时在node2上抓包，可以看到发给node4的request包和reply包：</p>
+<p><img src="/images/oss/c6d1706b6f8162cfac528ddf5319c8e2.png" alt="image.png"></p>
+<p>从request包可以看到src ip 是0.111， dest ip是 3.113，<strong>因为 node2 没有192.168.3.111这个ip</strong></p>
+<p>非常关键的我们看到node4的回复包 src ip 不是3.113，而是0.113（根据node4的路由就应该是0.113）</p>
+<p><img src="/images/oss/5c7172e2422579eb99c66e881d47bf99.png" alt="image.png"></p>
+<p>这就是问题所在，从node4过来的ipip包src ip都是0.113，实际这里ipip能认识的只是3.113. </p>
+<p>如果这个时候在3.113机器上把0.113网卡down掉，那么3.113上的：</p>
+<p>10.122.124.128&#x2F;26 via 192.168.0.111 dev tunl0 proto bird onlink 路由被自动删除，3.113将不再回复request。这是因为calico记录的node2的ip是192.168.0.111，所以会自动增加</p>
+<p>解决办法，在node4上删除这条路由记录，也就是强制让回复包走3.113网卡，这样收发的ip就能对应上了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ip route del 192.168.0.0/24 dev eth0 proto kernel scope link src 192.168.0.113</span><br><span class="line">//同时将默认路由改到3.113</span><br><span class="line">ip route del default via 192.168.0.253 dev eth0; </span><br><span class="line">ip route add default via 192.168.3.253 dev eth1</span><br></pre></td></tr></table></figure>
+
+<p>最终OK后，node4上的ip route是这样的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@az3-k8s-14 ~]# ip route</span><br><span class="line">default via 192.168.3.253 dev eth1 </span><br><span class="line">10.122.17.64/26 via 192.168.3.110 dev tunl0 proto bird onlink </span><br><span class="line">10.122.124.128/26 via 192.168.0.111 dev tunl0 proto bird onlink </span><br><span class="line">10.122.127.128/26 via 192.168.3.112 dev tunl0 proto bird onlink </span><br><span class="line">blackhole 10.122.157.128/26 proto bird </span><br><span class="line">10.122.157.129 dev cali19f6ea143e3 scope link </span><br><span class="line">10.122.157.130 dev cali09e016ead53 scope link </span><br><span class="line">10.122.157.131 dev cali0ad3225816d scope link </span><br><span class="line">10.122.157.132 dev cali55a5ff1a4aa scope link </span><br><span class="line">10.122.157.133 dev cali01cf8687c65 scope link </span><br><span class="line">10.122.157.134 dev cali65232d7ada6 scope link </span><br><span class="line">10.122.173.128/26 via 192.168.3.114 dev tunl0 proto bird onlink </span><br><span class="line">172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 </span><br><span class="line">192.168.3.0/24 dev eth1 proto kernel scope link src 192.168.3.113</span><br></pre></td></tr></table></figure>
+
+<p>正常后的抓包, 注意这里drequest的est ip 和reply的 src ip终于一致了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//request</span><br><span class="line">00:16:3e:02:06:1e &gt; ee:ff:ff:ff:ff:ff, ethertype IPv4 (0x0800), length 118: (tos 0x0, ttl 64, id 57971, offset 0, flags [DF], proto IPIP (4), length 104)</span><br><span class="line">    192.168.0.111 &gt; 192.168.3.110: (tos 0x0, ttl 64, id 18953, offset 0, flags [DF], proto ICMP (1), length 84)</span><br><span class="line">    10.122.124.128 &gt; 10.122.17.64: ICMP echo request, id 22001, seq 4, length 64</span><br><span class="line">    </span><br><span class="line">//reply    </span><br><span class="line">ee:ff:ff:ff:ff:ff &gt; 00:16:3e:02:06:1e, ethertype IPv4 (0x0800), length 118: (tos 0x0, ttl 64, id 2565, offset 0, flags [none], proto IPIP (4), length 104)</span><br><span class="line">    192.168.3.110 &gt; 192.168.0.111: (tos 0x0, ttl 64, id 26374, offset 0, flags [none], proto ICMP (1), length 84)</span><br><span class="line">    10.122.17.64 &gt; 10.122.124.128: ICMP echo reply, id 22001, seq 4, length 64</span><br></pre></td></tr></table></figure>
+
+<p>总结下来这两个案例都还是对路由不够了解，特别是案例2，因为有了多个网卡后导致路由更复杂。calico ipip的基本原理就是利用内核进行ipip封包，然后修改路由来保证网络的畅通。</p>
+<h2 id="flannel网络不通"><a href="#flannel网络不通" class="headerlink" title="flannel网络不通"></a>flannel网络不通</h2><h3 id="firewalld"><a href="#firewalld" class="headerlink" title="firewalld"></a>firewalld</h3><p>在麒麟系统的物理机上通过kubeadm setup集群，发现有的环境flannel网络不通，在宿主机上ping 其它物理机flannel.0网卡的ip，通过在对端宿主机抓包发现icmp收到后被防火墙扔掉了，抓包中可以看到错误信息：icmp unreachable - admin prohibited</p>
+<p>下图中正常的icmp是直接ping 物理机ip</p>
+<p><img src="/images/951413iMgBlog/image-20211228203650921.png" alt="image-20211228203650921"></p>
+<blockquote>
+<p>The “admin prohibited filter” seen in the tcpdump output means there is a firewall blocking a connection. It does it by sending back an ICMP packet meaning precisely that: the admin of that firewall doesn’t want those packets to get through. It could be a firewall at the destination site. It could be a firewall in between. It could be iptables on the Linux system.</p>
+</blockquote>
+<p>发现有问题的环境中宿主机的防火墙设置报错了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">12月 28 23:35:08 hygon253 firewalld[10493]: WARNING: COMMAND_FAILED: &#x27;/usr/sbin/iptables -w10 -t filter -X DOCKER-ISOLATION-STAGE-1&#x27; failed: iptables: No chain/target/match by that name.</span><br><span class="line">12月 28 23:35:08 hygon253 firewalld[10493]: WARNING: COMMAND_FAILED: &#x27;/usr/sbin/iptables -w10 -t filter -F DOCKER-ISOLATION-STAGE-2&#x27; failed: iptables: No chain/target/match by that name.</span><br></pre></td></tr></table></figure>
+
+<p>应该是因为启动docker的时候 firewalld 是运行着的</p>
+<blockquote>
+<p>Do you have firewalld enabled, and was it (re)started after docker was started? If so, then it’s likely that firewalld wiped docker’s IPTables rules. Restarting the docker daemon should re-create those rules.</p>
+</blockquote>
+<p>停掉 firewalld 服务可以解决这个问题</p>
+<h3 id="掉电重启后flannel网络不通"><a href="#掉电重启后flannel网络不通" class="headerlink" title="掉电重启后flannel网络不通"></a><a target="_blank" rel="noopener" href="https://github.com/flannel-io/flannel/issues/799">掉电重启后flannel网络不通</a></h3><p>flannel能收到包，但是cni0收不到包，说明包进到了目标宿主机，但是从flannel解开udp转送到cni的时候出了问题，大概率是iptables 拦截了包</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">It seems docker version &gt;=1.13 will add iptables rule like below,and it make this issue happen:</span><br><span class="line">iptables -P FORWARD DROP</span><br><span class="line"></span><br><span class="line">All you need to do is add a rule below:</span><br><span class="line">iptables -P FORWARD ACCEPT</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="清理"><a href="#清理" class="headerlink" title="清理"></a><a target="_blank" rel="noopener" href="https://serverfault.com/questions/247767/cannot-delete-gre-tunnel">清理</a></h2><p>cni信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/etc/cni/net.d/*</span><br><span class="line">/var/lib/cni/ 下存放有ip分配信息</span><br></pre></td></tr></table></figure>
+
+<p>calico创建的tunl0网卡是个tunnel，可以通过 ip tunnel show来查看，清理不掉（重启可以清理掉tunl0）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ip link set dev tunl0 name tunl0_fallback</span><br><span class="line"></span><br><span class="line">或者</span><br><span class="line">/sbin/ip link set eth1 down</span><br><span class="line">/sbin/ip link set eth1 name eth123</span><br><span class="line">/sbin/ip link set eth123 up</span><br></pre></td></tr></table></figure>
+
+<p>flannel</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ip link delete flannel.1</span><br><span class="line">ip link delete cni0</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="netns"><a href="#netns" class="headerlink" title="netns"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/lscMpc5BWAEzjgYw6H0wBw">netns</a></h2><p>以下case创建一个名为 ren 的netns，然后在里面增加一对虚拟网卡veth1 veth1_p,  veth1放置在ren里面，veth1_p 放在物理机上，给他们配置上ip并up就能通了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">1004  [2021-10-27 10:49:08] ip netns add ren</span><br><span class="line">1005  [2021-10-27 10:49:12] ip netns show</span><br><span class="line">1006  [2021-10-27 10:49:22] ip netns exec ren route   //为空</span><br><span class="line">1007  [2021-10-27 10:49:29] ip netns exec ren iptables -L</span><br><span class="line">1008  [2021-10-27 10:49:55] ip link add veth1 type veth peer name veth1_p //此时宿主机上能看到这两块网卡</span><br><span class="line">1009  [2021-10-27 10:50:07] ip link set veth1 netns ren //将veth1从宿主机默认网络空间挪到ren中，宿主机中看不到veth1了</span><br><span class="line">1010  [2021-10-27 10:50:18] ip netns exec ren route  </span><br><span class="line">1011  [2021-10-27 10:50:25] ip netns exec ren iptables -L</span><br><span class="line">1012  [2021-10-27 10:50:39] ifconfig</span><br><span class="line">1013  [2021-10-27 10:50:51] ip link list</span><br><span class="line">1014  [2021-10-27 10:51:29] ip netns exec ren ip link list</span><br><span class="line">1017  [2021-10-27 10:53:27] ip netns exec ren ip addr add 172.19.0.100/24 dev veth1 </span><br><span class="line">1018  [2021-10-27 10:53:31] ip netns exec ren ip link list</span><br><span class="line">1019  [2021-10-27 10:53:39] ip netns exec ren ifconfig</span><br><span class="line">1020  [2021-10-27 10:53:42] ip netns exec ren ifconfig -a</span><br><span class="line">1021  [2021-10-27 10:54:13] ip netns exec ren ip link set dev veth1 up</span><br><span class="line">1022  [2021-10-27 10:54:16] ip netns exec ren ifconfig</span><br><span class="line">1023  [2021-10-27 10:54:22] ping 172.19.0.100</span><br><span class="line">1024  [2021-10-27 10:54:35] ifconfig -a</span><br><span class="line">1025  [2021-10-27 10:55:03] ip netns exec ren ip addr add 172.19.0.101/24 dev veth1_p</span><br><span class="line">1026  [2021-10-27 10:55:10] ip addr add 172.19.0.101/24 dev veth1_p</span><br><span class="line">1027  [2021-10-27 10:55:16] ifconfig veth1_p</span><br><span class="line">1028  [2021-10-27 10:55:30] ip link set dev veth1_p up</span><br><span class="line">1029  [2021-10-27 10:55:32] ifconfig veth1_p</span><br><span class="line">1030  [2021-10-27 10:55:38] ping 172.19.0.101</span><br><span class="line">1031  [2021-10-27 10:55:43] ping 172.19.0.100</span><br><span class="line">1032  [2021-10-27 10:55:53] ip link set dev veth1_p down</span><br><span class="line">1033  [2021-10-27 10:55:54] ping 172.19.0.100</span><br><span class="line">1034  [2021-10-27 10:55:58] ping 172.19.0.101</span><br><span class="line">1035  [2021-10-27 10:56:08] ifconfig veth1_p</span><br><span class="line">1036  [2021-10-27 10:56:32] ping 172.19.0.101</span><br><span class="line">1037  [2021-10-27 10:57:04] ip netns exec ren route</span><br><span class="line">1038  [2021-10-27 10:57:52] ip netns exec ren ping 172.19.0.101</span><br><span class="line">1039  [2021-10-27 10:57:58] ip link set dev veth1_p up</span><br><span class="line">1040  [2021-10-27 10:57:59] ip netns exec ren ping 172.19.0.101</span><br><span class="line">1041  [2021-10-27 10:58:06] ip netns exec ren ping 172.19.0.100</span><br><span class="line">1042  [2021-10-27 10:58:14] ip netns exec ren ifconfig</span><br><span class="line">1043  [2021-10-27 10:58:19] ip netns exec ren route</span><br><span class="line">1044  [2021-10-27 10:58:26] ip netns exec ren ping 172.19.0.100 -I veth1</span><br><span class="line">1045  [2021-10-27 10:58:58] ifconfig veth1_p</span><br><span class="line">1046  [2021-10-27 10:59:10] ping 172.19.0.100</span><br><span class="line">1047  [2021-10-27 10:59:26] ip netns exec ren ping 172.19.0.101 -I veth1</span><br><span class="line"></span><br><span class="line">把网卡加入到docker0的bridge下</span><br><span class="line">1160  [2021-10-27 12:17:37] brctl show</span><br><span class="line">1161  [2021-10-27 12:18:05] ip link set dev veth3_p master docker0</span><br><span class="line">1162  [2021-10-27 12:18:09] ip link set dev veth1_p master docker0</span><br><span class="line">1163  [2021-10-27 12:18:13] ip link set dev veth2 master docker0</span><br><span class="line">1164  [2021-10-27 12:18:15] brctl show</span><br><span class="line"></span><br><span class="line">btctl showmacs br0</span><br></pre></td></tr></table></figure>
+
+<p>Linux 上存在一个默认的网络命名空间，Linux 中的 1 号进程初始使用该默认空间。Linux 上其它所有进程都是由 1 号进程派生出来的，在派生 clone 的时候如果没有额外特别指定，所有的进程都将共享这个默认网络空间。</p>
+<p>所有的网络设备刚创建出来都是在宿主机默认网络空间下的。可以通过 <code>ip link set 设备名 netns 网络空间名</code> 将设备移动到另外一个空间里去，socket也是归属在某一个网络命名空间下的，由创建socket进程所在的netns来决定socket所在的netns</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//file: net/socket.c</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">sock_create</span><span class="params">(<span class="type">int</span> family, <span class="type">int</span> type, <span class="type">int</span> protocol, <span class="keyword">struct</span> socket **res)</span></span><br><span class="line">&#123;</span><br><span class="line"> <span class="keyword">return</span> __sock_create(current-&gt;nsproxy-&gt;net_ns, family, type, protocol, res, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//file: include/net/sock.h</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">sock_net_set</span><span class="params">(<span class="keyword">struct</span> sock *sk, <span class="keyword">struct</span> net *net)</span></span><br><span class="line">&#123;</span><br><span class="line"> write_pnet(&amp;sk-&gt;sk_net, net);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>内核提供了三种操作命名空间的方式，分别是 clone、setns 和 unshare。ip netns add 使用的是 unshare，原理和 clone 是类似的。</p>
+<p><img src="/images/951413iMgBlog/640-5304524." alt="Image"></p>
+<p>每个 net 下都包含了自己的路由表、iptable 以及内核参数配置等等</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://morven.life/notes/networking-3-ipip/">https://morven.life/notes/networking-3-ipip/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/bakari/p/10564347.html">https://www.cnblogs.com/bakari/p/10564347.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/goldsunshine/p/10701242.html">https://www.cnblogs.com/goldsunshine/p/10701242.html</a></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -2283,184 +2493,6 @@ LISTEN    0     511              *:8085           *:*
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">//官方</span><br><span class="line">echo &quot;deb http://apt.kubernetes.io/ kubernetes-xenial main&quot; | tee -a /etc/apt/sources.list.d/kubernetes.list</span><br><span class="line"></span><br><span class="line">//阿里云仓库</span><br><span class="line">echo &#x27;deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main&#x27; &gt; /etc/apt/sources.list.d/kubernetes.list</span><br><span class="line">curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -</span><br><span class="line">apt-get update</span><br><span class="line"></span><br><span class="line">export KUBE_VERSION=&quot;1.20.5&quot;</span><br><span class="line">apt-get install -y kubeadm=$KUBE_VERSION-00 kubelet=$KUBE_VERSION-00 kubectl=$KUBE_VERSION-00</span><br><span class="line">sudo apt-mark hold kubelet kubeadm kubectl</span><br><span class="line"></span><br><span class="line">[ -d /etc/bash_completion.d ] &amp;&amp; \</span><br><span class="line">    &#123; kubectl completion bash &gt; /etc/bash_completion.d/kubectl; \</span><br><span class="line">      kubeadm completion bash &gt; /etc/bash_completion.d/kubadm; &#125;</span><br><span class="line">      </span><br><span class="line">[ ! -d /usr/lib/systemd/system/kubelet.service.d ] &amp;&amp; mkdir -p /usr/lib/systemd/system/kubelet.service.d</span><br><span class="line">cat &lt;&lt; EOF &gt; /usr/lib/systemd/system/kubelet.service.d/11-cgroup.conf</span><br><span class="line">[Service]</span><br><span class="line">CPUAccounting=true</span><br><span class="line">MemoryAccounting=true</span><br><span class="line">BlockIOAccounting=true</span><br><span class="line">ExecStartPre=/usr/bin/bash -c &#x27;/usr/bin/mkdir -p /sys/fs/cgroup/&#123;cpuset,memory,systemd,pids,&quot;cpu,cpuacct&quot;&#125;/&#123;system,kube,kubepods&#125;.slice&#x27;</span><br><span class="line">Slice=kube.slice</span><br><span class="line">EOF</span><br><span class="line">systemctl daemon-reload</span><br><span class="line"> </span><br><span class="line">systemctl enable kubelet.service</span><br></pre></td></tr></table></figure>
 
 <h3 id="docker-仓库"><a href="#docker-仓库" class="headerlink" title="docker 仓库"></a>docker 仓库</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release bash-completion</span><br><span class="line">    </span><br><span class="line">curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/debian/gpg | sudo apt-key add -</span><br><span class="line">echo &quot;deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs)   stable&quot; &gt; /etc/apt/sources.list.d/docker-ce.list</span><br><span class="line">sudo apt-get update</span><br><span class="line">apt-get install -y docker-ce docker-ce-cli containerd.io</span><br><span class="line">apt-mark hold docker-ce docker-ce-cli containerd.io</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://www.ruanyifeng.com/blog/2019/08/xargs-tutorial.html">xargs 命令教程</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2020/01/24/%E5%A6%82%E4%BD%95%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E8%BD%AF%E4%BB%B6%E4%BB%93%E5%BA%93/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="twitter @plantegg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="plantegg">
-      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | plantegg">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/01/24/%E5%A6%82%E4%BD%95%E5%88%B6%E4%BD%9C%E6%9C%AC%E5%9C%B0%E8%BD%AF%E4%BB%B6%E4%BB%93%E5%BA%93/" class="post-title-link" itemprop="url">如何制作本地软件仓库</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-01-24 17:30:03" itemprop="dateCreated datePublished" datetime="2020-01-24T17:30:03+08:00">2020-01-24</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-11-29 15:11:18" itemprop="dateModified" datetime="2025-11-29T15:11:18+08:00">2025-11-29</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="如何制作软件仓库"><a href="#如何制作软件仓库" class="headerlink" title="如何制作软件仓库"></a>如何制作软件仓库</h1><p>某些情况下在没有外网的环境需要安装一些软件，但是软件依赖比较多，那么可以提前将所有依赖下载到本地，然后将他们制作成一个yum repo，安装的时候就会自动将依赖包都安装好。</p>
-<p>centos下是 yum 仓库，Debian、ubuntu下是apt仓库，我们先讲 yum 仓库的制作，Debian apt 仓库类似</p>
-<h2 id="收集所有rpm包"><a href="#收集所有rpm包" class="headerlink" title="收集所有rpm包"></a>收集所有rpm包</h2><p>创建一个文件夹，比如 Yum，将收集到的所有rpm包放在里面，比如安装ansible和docker需要的依赖文件：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">-rwxr-xr-x 1 root root  73K 7月  12 14:22 audit-libs-python-2.8.4-4.el7.x86_64.rpm</span><br><span class="line">-rwxr-xr-x 1 root root 295K 7月  12 14:22 checkpolicy-2.5-8.el7.x86_64.rpm</span><br><span class="line">-rwxr-xr-x 1 root root  23M 7月  12 14:22 containerd.io-1.2.2-3.el7.x86_64.rpm</span><br><span class="line">-rwxr-xr-x 1 root root  26K 7月  12 14:22 container-selinux-2.9-4.el7.noarch.rpm</span><br><span class="line">-rwxr-xr-x 1 root root  37K 7月  12 14:22 container-selinux-2.74-1.el7.noarch.rpm</span><br><span class="line">-rwxr-xr-x 1 root root  14M 7月  12 14:22 docker-ce-cli-18.09.0-3.el7.x86_64.rpm</span><br><span class="line">-rwxr-xr-x 1 root root  29K 7月  12 14:22 docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm</span><br><span class="line">-r-xr-xr-x 1 root root  22K 7月  12 14:23 sshpass-1.06-2.el7.x86_64.rpm</span><br><span class="line">-r-xr-xr-x 1 root root  22K 7月  12 14:23 sshpass-1.06-1.el7.x86_64.rpm</span><br><span class="line">-r-xr-xr-x 1 root root 154K 7月  12 14:23 PyYAML-3.10-11.el7.x86_64.rpm</span><br><span class="line">-r-xr-xr-x 1 root root  29K 7月  12 14:23 python-six-1.9.0-2.el7.noarch.rpm</span><br><span class="line">-r-xr-xr-x 1 root root 397K 7月  12 14:23 python-setuptools-0.9.8-7.el7.noarch.rpm</span><br></pre></td></tr></table></figure>
-
-<p>收集方法：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">//先安装yum工具</span><br><span class="line">yum install yum-utils -y</span><br><span class="line">//将 ansible 依赖包都下载下来</span><br><span class="line">repoquery --requires --resolve --recursive ansible | xargs -r yumdownloader --destdir=/tmp/ansible</span><br><span class="line">//将ansible rpm自己下载回来</span><br><span class="line">yumdownloader --destdir=/tmp/ansible --resolve ansible</span><br><span class="line">//验证一下依赖关系是完整的</span><br><span class="line">//repotrack ansible</span><br></pre></td></tr></table></figure>
-
-<h2 id="创建仓库索引"><a href="#创建仓库索引" class="headerlink" title="创建仓库索引"></a>创建仓库索引</h2><p>需要安装工具 yum install createrepo -y：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># createrepo ./public_yum/</span><br><span class="line">Spawning worker 0 with 6 pkgs</span><br><span class="line">Spawning worker 1 with 6 pkgs</span><br><span class="line">Spawning worker 23 with 5 pkgs</span><br><span class="line">Workers Finished</span><br><span class="line">Saving Primary metadata</span><br><span class="line">Saving file lists metadata</span><br><span class="line">Saving other metadata</span><br><span class="line">Generating sqlite DBs</span><br><span class="line">Sqlite DBs complete</span><br></pre></td></tr></table></figure>
-
-<p>会在yum文件夹下生成一个索引文件夹 repodata</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">drwxr-xr-x 2 root root 4.0K 7月  12 14:25 repodata</span><br><span class="line">[root@az1-drds-79 yum]# ls repodata/</span><br><span class="line">5e15c62fec1fe43c6025ecf4d370d632f4b3f607500016e045ad94b70f87bac3-filelists.xml.gz</span><br><span class="line">7a314396d6e90532c5c534567f9bd34eee94c3f8945fc2191b225b2861ace2b6-other.xml.gz</span><br><span class="line">ce9dce19f6b426b8856747b01d51ceaa2e744b6bbd5fbc68733aa3195f724590-primary.xml.gz</span><br><span class="line">ee33b7d79e32fe6ad813af92a778a0ec8e5cc2dfdc9b16d0be8cff6a13e80d99-filelists.sqlite.bz2</span><br><span class="line">f7e8177e7207a4ff94bade329a0f6b572a72e21da106dd9144f8b1cdf0489cab-primary.sqlite.bz2</span><br><span class="line">ff52e1f1859790a7b573d2708b02404eb8b29aa4b0c337bda83af75b305bfb36-other.sqlite.bz2</span><br><span class="line">repomd.xml</span><br></pre></td></tr></table></figure>
-
-<h2 id="生成iso镜像文件"><a href="#生成iso镜像文件" class="headerlink" title="生成iso镜像文件"></a>生成iso镜像文件</h2><p>非必要步骤，如果需要带到客户环境可以先生成iso，不过不够灵活。</p>
-<p>也可以不用生成iso，直接在drds.repo中指定 createrepo 的目录也可以，记得要先执行 yum clean all和yum update </p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#mkisofs -r -o docker_ansible.iso ./yum/</span><br><span class="line">I: -input-charset not specified, using utf-8 (detected in locale settings)</span><br><span class="line">Using PYTHO000.RPM;1 for  /python-httplib2-0.7.7-3.el7.noarch.rpm (python-httplib2-0.9.1-3.el7.noarch.rpm)</span><br><span class="line">Using MARIA006.RPM;1 for  /mariadb-5.5.56-2.el7.x86_64.rpm (mariadb-libs-5.5.56-2.el7.x86_64.rpm)</span><br><span class="line">Using LIBTO001.RPM;1 for  /libtomcrypt-1.17-25.el7.x86_64.rpm (libtomcrypt-1.17-26.el7.x86_64.rpm)</span><br><span class="line">  6.11% done, estimate finish Sun Jul 12 14:26:47 2020</span><br><span class="line"> 97.60% done, estimate finish Sun Jul 12 14:26:48 2020</span><br><span class="line">Total translation table size: 0</span><br><span class="line">Total rockridge attributes bytes: 14838</span><br><span class="line">Total directory bytes: 2048</span><br><span class="line">Path table size(bytes): 26</span><br><span class="line">Max brk space used 21000</span><br><span class="line">81981 extents written (160 MB)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<h2 id="将-生成的-iso挂载到目标机器上"><a href="#将-生成的-iso挂载到目标机器上" class="headerlink" title="将 生成的 iso挂载到目标机器上"></a>将 生成的 iso挂载到目标机器上</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># mkdir /mnt/iso</span><br><span class="line"># mount ./docker_ansible.iso /mnt/iso</span><br><span class="line">mount: /dev/loop0 is write-protected, mounting read-only</span><br></pre></td></tr></table></figure>
-
-<h2 id="配置本地-yum-源"><a href="#配置本地-yum-源" class="headerlink" title="配置本地 yum 源"></a>配置本地 yum 源</h2><p>yum repository不是必须要求iso挂载，直接指向rpm文件夹（必须要有 createrepo 建立索引了）也可以</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># cat /etc/yum.repos.d/drds.repo </span><br><span class="line">[drds]</span><br><span class="line">name=drds Extra Packages for Enterprise Linux 7 - $basearch</span><br><span class="line">enabled=1</span><br><span class="line">failovermethod=priority</span><br><span class="line">baseurl=file:///mnt/repo #baseurl=http://192.168.1.91:8000/ 本地内网</span><br><span class="line">priority=1  #添加priority=1，数字越小优先级越高，也可以修改网络源的priority的值</span><br><span class="line">gpgcheck=0</span><br><span class="line">#gpgkey=file:///mnt/cdrom/RPM-GPG-KEY-CentOS-5    #注：这个你cd /mnt/cdrom/可以看到这个key，这里仅仅是个例子， 因为gpgcheck是0 ，所以gpgkey不需要了</span><br></pre></td></tr></table></figure>
-
-<p>到此就可以在没有网络环境的机器上直接：yum install ansible docker -y 了 </p>
-<h2 id="yum-仓库代理"><a href="#yum-仓库代理" class="headerlink" title="yum 仓库代理"></a><a target="_blank" rel="noopener" href="https://pshizhsysu.gitbook.io/linux/yum/wei-yum-yuan-pei-zhi-dai-li">yum 仓库代理</a></h2><p>如果需要代理可以在docker.repo 最后添加：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">proxy=socks5://127.0.0.1:12345 //socks代理 或者 proxy=http://ip:port</span><br></pre></td></tr></table></figure>
-
-<p>如果要给全局配置代理，则在 &#x2F;etc&#x2F;yum.conf 最后添加如上行</p>
-<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>测试的话可以指定repo 源： yum install ansible –enablerepo&#x3D;drds （drds 优先级最高）</p>
-<p>本地会cache一些rpm的版本信息，可以执行 yum clean all 得到一个干净的测试环境</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yum clean all</span><br><span class="line">yum list</span><br><span class="line">yum deplist ansible</span><br></pre></td></tr></table></figure>
-
-<h2 id="yum-源问题处理"><a href="#yum-源问题处理" class="headerlink" title="yum 源问题处理"></a>yum 源问题处理</h2><p><a target="_blank" rel="noopener" href="https://access.redhat.com/solutions/641093">Yum commands error “pycurl.so: undefined symbol”</a></p>
-<h2 id="xargs-作用"><a href="#xargs-作用" class="headerlink" title="xargs 作用"></a>xargs 作用</h2><p><code>xargs</code>命令的作用，是将标准输入转为命令行参数。因为有些命令是不接受标准输入的，比如echo</p>
-<p><code>xargs</code>的作用在于，大多数命令（比如<code>rm</code>、<code>mkdir</code>、<code>ls</code>）与管道一起使用时，都需要<code>xargs</code>将标准输入转为命令行参数。</p>
-<h2 id="dnf-使用"><a href="#dnf-使用" class="headerlink" title="dnf 使用"></a>dnf 使用</h2><p><strong>DNF</strong> 是新一代的rpm软件包管理器。他首先出现在 Fedora 18 这个发行版中。而最近，它取代了yum，正式成为 Fedora 22 的包管理器。</p>
-<p>DNF包管理器克服了YUM包管理器的一些瓶颈，提升了包括用户体验，内存占用，依赖分析，运行速度等多方面的内容。DNF使用 RPM, libsolv 和 hawkey 库进行包管理操作。尽管它没有预装在 CentOS 和 RHEL 7 中，但你可以在使用 YUM 的同时使用 DNF 。你可以在这里获得关于 DNF 的更多知识：《 DNF 代替 YUM ，你所不知道的缘由》</p>
-<p>DNF 包管理器作为 YUM 包管理器的升级替代品，它能自动完成更多的操作。但在我看来，正因如此，所以 DNF 包管理器不会太受那些经验老道的 Linux 系统管理者的欢迎。举例如下：</p>
-<ol>
-<li>在 DNF 中没有 –skip-broken 命令，并且没有替代命令供选择。</li>
-<li>在 DNF 中没有判断哪个包提供了指定依赖的 resolvedep 命令。</li>
-<li>在 DNF 中没有用来列出某个软件依赖包的 deplist 命令。</li>
-<li>当你在 DNF 中排除了某个软件库，那么该操作将会影响到你之后所有的操作，不像在 YUM 下那样，你的排除操作只会咋升级和安装软件时才起作用。</li>
-</ol>
-<h2 id="安装yum源"><a href="#安装yum源" class="headerlink" title="安装yum源"></a>安装yum源</h2><p>安装7.70版本curl yum源</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rpm -Uvh http://www.city-fan.org/ftp/contrib/yum-repo/city-fan.org-release-2-1.rhel7.noarch.rpm</span><br></pre></td></tr></table></figure>
-
-<h2 id="其它技巧"><a href="#其它技巧" class="headerlink" title="其它技巧"></a>其它技巧</h2><h3 id="rpm依赖查询"><a href="#rpm依赖查询" class="headerlink" title="rpm依赖查询"></a>rpm依赖查询</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">rpm -q --whatprovides file-name //查询一个文件来自哪个rpm包</span><br><span class="line">rpm -qf /usr/lib/systemd/libsystemd-shared-239.so // 查询一个so lib来自哪个rpm包</span><br><span class="line">或者 yum whatprovides /usr/lib/systemd/libsystemd-shared-239.so</span><br><span class="line">yum provides */libmysqlclient.so.18</span><br><span class="line"></span><br><span class="line">rpm -qi //查看rpm包安装的安装信息</span><br></pre></td></tr></table></figure>
-
-<h3 id="多版本问题"><a href="#多版本问题" class="headerlink" title="多版本问题"></a>多版本问题</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//查看protobuf 的多个版本</span><br><span class="line"> yum --showduplicates list protobuf</span><br><span class="line">//or</span><br><span class="line"> repoquery --show-duplicates protobuf</span><br><span class="line"></span><br><span class="line">//指定版本安装，一般是安装教老的版本 </span><br><span class="line"> yum install protobuf-3.6.1-4.el7</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="制作debian-仓库"><a href="#制作debian-仓库" class="headerlink" title="制作debian 仓库"></a><a target="_blank" rel="noopener" href="https://rpmdeb.com/devops-articles/how-to-create-local-debian-repository/">制作debian 仓库</a></h2><p>适合ubuntu、deepin、uos等, 参考：<a target="_blank" rel="noopener" href="https://lework.github.io/2021/04/03/debian-kubeadm-install/">https://lework.github.io/2021/04/03/debian-kubeadm-install/</a></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#添加新仓库</span><br><span class="line">sudo apt-add-repository &#x27;deb http://ftp.us.debian.org/debian stretch main contrib non-free&#x27;</span><br></pre></td></tr></table></figure>
-
-<p><img src="/images/951413iMgBlog/2-60.png" alt="img"></p>
-<p><a target="_blank" rel="noopener" href="https://zh-cn.linuxcapable.com/%E5%9C%A8-debian-11-%E9%9D%B6%E5%BF%83%E4%B8%8A%E5%AE%89%E8%A3%85-rpm-%E5%8C%85/">rpm转换成 dpkg</a></p>
-<h3 id="apt-mirror"><a href="#apt-mirror" class="headerlink" title="apt-mirror"></a><a target="_blank" rel="noopener" href="https://www.rickylss.site/os/linux/2020/05/12/debian-repositry/">apt-mirror</a></h3><p>先要安装apt-mirror 工具，安装后会生成配置文件 &#x2F;etc&#x2F;apt&#x2F;mirror.list 然后需要手工修改配置文件：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">#cat /etc/apt/mirror.list</span><br><span class="line">############# config ##################</span><br><span class="line"></span><br><span class="line">#下载下来的仓库文件放在哪里</span><br><span class="line">set base_path    /polarx/debian</span><br><span class="line"></span><br><span class="line">set mirror_path  $base_path/mirror</span><br><span class="line">set skel_path    $base_path/skel</span><br><span class="line">set var_path     $base_path/var</span><br><span class="line">set cleanscript $var_path/clean.sh</span><br><span class="line">set defaultarch  amd64</span><br><span class="line">#set postmirror_script $var_path/postmirror.sh</span><br><span class="line">set run_postmirror 0</span><br><span class="line">set nthreads     20</span><br><span class="line">set _tilde 0</span><br><span class="line">#</span><br><span class="line">############# end config ##############</span><br><span class="line"></span><br><span class="line">#从哪里镜像仓库</span><br><span class="line">deb http://yum.tbsite.net/mirrors/debian/ buster main non-free contrib</span><br><span class="line">#deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main</span><br><span class="line"></span><br><span class="line">#deb http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-src http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line"></span><br><span class="line"># mirror additional architectures</span><br><span class="line">#deb-alpha http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-amd64 http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-armel http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-hppa http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-i386 http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-ia64 http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-m68k http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-mips http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-mipsel http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-powerpc http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-s390 http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line">#deb-sparc http://ftp.us.debian.org/debian unstable main contrib non-free</span><br><span class="line"></span><br><span class="line">#clean http://ftp.us.debian.org/debian</span><br><span class="line">clean http://yum.tbsite.net/mirrors/debian/</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="debian仓库介绍"><a href="#debian仓库介绍" class="headerlink" title="debian仓库介绍"></a><a target="_blank" rel="noopener" href="https://wiki.debian.org/zh_CN/DebianRepository">debian仓库介绍</a></h3><p>一个Debian仓库包含多个<strong>发行版</strong>。Debian 的发行版是以 “玩具总动员 “电影中的角色命名的 (wheezy, jessie, stretch, …)。 代号有别名，叫做<strong>套件</strong>(stable, oldstable, testing, unstable)。一个发行版会被分成几个<strong>组件</strong>。在 Debian 中，这些组件被命名为 <code>main</code>, <code>contrib</code>, 和 <code>non-free</code>，并表并表示它们所包含的软件的授权条款。一个版本也有各种<strong>架构</strong>(amd64, i386, mips, powerpc, s390x, …)的软件包，以及源码和架构独立的软件包。</p>
-<p>仓库的<a target="_blank" rel="noopener" href="https://mirrors.aliyun.com/debian/dists/">根目录下有一个<code>dists</code> 目录</a>，而这个目录又有每个发行版和套件的目录，后者通常是前者的符号链接，但浏览器不会向您显示出这个区别。每个发行版子目录都包含一个加密签名的<code>Release</code>文件和每个组件的目录，里面是不同架构的目录，名为<code>binary</code>-*&lt;架构&gt;*和<code>sources</code>。而在这些文件中，<code>Packages</code>是文本文件，包含了软件包。嗯，那么实际的软件包在哪里？</p>
-<p><img src="/images/951413iMgBlog/image-20220829163817671.png" alt="image-20220829163817671"></p>
-<p>软件包本身在仓库根目录下的<code>pool</code>。在<code>pool</code>下面又有所有组件的目录，其中有<code>0</code>，…，<code>9</code>，<code>a</code>，<code>b</code>，.., <code>z</code>, <code>liba</code>, … , <code>libz</code>。 而在这些目录中，是以它们所包含的软件包命名的目录，这些目录最后包含实际的软件包，即<code>.deb</code>文件。这个名字不一定是软件包本身的名字，例如，软件包bsdutils在目录<code>pool/main/u/util-linux</code> 下，它是生成软件包的源码的名称。一个上游源可能会生成多个二进制软件包，而所有这些软件包最终都会在<code>pool</code>下面的同一个子目录中。额外的单字母目录只是一个技巧，以避免在一个目录中有太多的条目，因为这是很多系统传统上存在性能问题的原因。</p>
-<p>在<code>pool</code>下面的子目录中，通常会有多个版本的软件包，而每个版本的软件包属于什么发行版的信息只存在于索引中。这样一来，同一个版本的包可软件以属于多个发行版，但只使用一次磁盘空间，而且不需要求助于硬链接或符号链接，所以镜像相当简单，甚至可以在没有这些概念的系统中进行。</p>
-<h3 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">apt install kubeadm=1.20.12-00 //指定版本安装</span><br><span class="line"></span><br><span class="line">#查询可用版本</span><br><span class="line">apt-cache policy kubeadm</span><br><span class="line">apt list --all-versions kubeadm</span><br><span class="line"></span><br><span class="line">#清理</span><br><span class="line">apt clean --dry-run </span><br><span class="line">apt update</span><br><span class="line">apt list/dpkg -l //列出本机所有已经安装的软件</span><br><span class="line">apt show kubeadm //显示版本、作者等信息</span><br><span class="line"></span><br><span class="line">#查询某个安装包的所有文件</span><br><span class="line">dpkg-query -L kubeadm</span><br><span class="line"></span><br><span class="line">#列出所有依赖包</span><br><span class="line">apt-cache depends ansible</span><br><span class="line"></span><br><span class="line">#被依赖查询</span><br><span class="line">apt-cache rdepends kubelet</span><br><span class="line"></span><br><span class="line">dpkg -I kubernetes/pool/kubeadm_1.21.0-00_amd64.deb</span><br><span class="line"></span><br><span class="line">#下载依赖包</span><br><span class="line">apt-get download $(apt-rdepends kubeadm|grep -v &quot;^ &quot;)</span><br><span class="line">aptitude --download-only -y install $(apt-rdepends kubeadm|grep -v &quot;^ &quot;) //不能下载已经安装了的依赖包</span><br><span class="line"></span><br><span class="line">apt download $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances kubeadm | grep &quot;^\w&quot; | sort -u)</span><br></pre></td></tr></table></figure>
-
-<h3 id="简单仓库"><a href="#简单仓库" class="headerlink" title="简单仓库"></a><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/482592599">简单仓库</a></h3><p>下载所有 deb 包以及他们的依赖</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt download $(apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances kubeadm | grep &quot;^\w&quot; | sort -u)</span><br></pre></td></tr></table></figure>
-
-<p>到deb 包所在的目录下生成 index</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dpkg-scanpackages -m . &gt; Packages</span><br></pre></td></tr></table></figure>
-
-<p>&#x2F;etc&#x2F;apt&#x2F;source.list 指向这个目录</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">deb [trusted=yes] file:/polarx/test /</span><br><span class="line">or</span><br><span class="line">deb [trusted=yes] http://kunpeng/pool/ ./</span><br></pre></td></tr></table></figure>
-
-<p>验证：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">apt update //看是否能拉取你刚配置的仓库</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="Kubernetes-仓库"><a href="#Kubernetes-仓库" class="headerlink" title="Kubernetes 仓库"></a>Kubernetes 仓库</h3><p><a target="_blank" rel="noopener" href="https://lework.github.io/2021/04/03/debian-kubeadm-install/">debian 上通过kubeadm 安装 kubernetes 集群</a></p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">//官方</span><br><span class="line">echo &quot;deb http://apt.kubernetes.io/ kubernetes-xenial main&quot; | tee -a /etc/apt/sources.list.d/kubernetes.list</span><br><span class="line"></span><br><span class="line">//阿里云仓库</span><br><span class="line">echo &#x27;deb https://mirrors.aliyun.com/kubernetes/apt kubernetes-xenial main&#x27; &gt; /etc/apt/sources.list.d/kubernetes.list</span><br><span class="line">curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -</span><br><span class="line">apt-get update</span><br><span class="line"></span><br><span class="line">export KUBE_VERSION=&quot;1.20.5&quot;</span><br><span class="line">apt-get install -y kubeadm=$KUBE_VERSION-00 kubelet=$KUBE_VERSION-00 kubectl=$KUBE_VERSION-00</span><br><span class="line">sudo apt-mark hold kubelet kubeadm kubectl</span><br><span class="line"></span><br><span class="line">[ -d /etc/bash_completion.d ] &amp;&amp; \</span><br><span class="line">    &#123; kubectl completion bash &gt; /etc/bash_completion.d/kubectl; \</span><br><span class="line">      kubeadm completion bash &gt; /etc/bash_completion.d/kubadm; &#125;</span><br><span class="line">      </span><br><span class="line">[ ! -d /usr/lib/systemd/system/kubelet.service.d ] &amp;&amp; mkdir -p /usr/lib/systemd/system/kubelet.service.d</span><br><span class="line">cat &lt;&lt; EOF &gt; /usr/lib/systemd/system/kubelet.service.d/11-cgroup.conf</span><br><span class="line">[Service]</span><br><span class="line">CPUAccounting=true</span><br><span class="line">MemoryAccounting=true</span><br><span class="line">BlockIOAccounting=true</span><br><span class="line">ExecStartPre=/usr/bin/bash -c &#x27;/usr/bin/mkdir -p /sys/fs/cgroup/&#123;cpuset,memory,systemd,pids,&quot;cpu,cpuacct&quot;&#125;/&#123;system,kube,kubepods&#125;.slice&#x27;</span><br><span class="line">Slice=kube.slice</span><br><span class="line">EOF</span><br><span class="line">systemctl daemon-reload</span><br><span class="line"> </span><br><span class="line">systemctl enable kubelet.service</span><br></pre></td></tr></table></figure>
-
-<h3 id="docker-仓库"><a href="#docker-仓库" class="headerlink" title="docker 仓库"></a>docker 仓库</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">apt-get install -y apt-transport-https ca-certificates curl gnupg2 lsb-release bash-completion</span><br><span class="line">    </span><br><span class="line">curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/debian/gpg | sudo apt-key add -</span><br><span class="line">echo &quot;deb [arch=amd64] https://mirrors.aliyun.com/docker-ce/linux/debian $(lsb_release -cs)   stable&quot; &gt; /etc/apt/sources.list.d/docker-ce.list</span><br><span class="line">sudo apt-get update</span><br><span class="line">apt-get install -y docker-ce docker-ce-cli containerd.io</span><br><span class="line">apt-mark hold docker-ce docker-ce-cli containerd.io</span><br></pre></td></tr></table></figure>
-
-<h3 id="锁定已安装版本"><a href="#锁定已安装版本" class="headerlink" title="锁定已安装版本"></a>锁定已安装版本</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//锁定这三个软件的版本，避免意外升级导致版本错误：</span><br><span class="line">sudo apt-mark hold kubeadm kubelet kubectl</span><br></pre></td></tr></table></figure>
 
 
 
