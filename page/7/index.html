@@ -140,7 +140,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">205</span>
+          <span class="site-state-item-count">206</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -151,7 +151,7 @@
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">309</span>
+        <span class="site-state-item-count">310</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -168,6 +168,123 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2022/07/03/MySQL8.0%E7%9A%84%E4%B8%80%E4%BA%9B%E6%95%B0%E6%8D%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="twitter @plantegg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="plantegg">
+      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | plantegg">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2022/07/03/MySQL8.0%E7%9A%84%E4%B8%80%E4%BA%9B%E6%95%B0%E6%8D%AE/" class="post-title-link" itemprop="url">MySQL 8.0新特性和性能数据</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2022-07-03 17:30:03" itemprop="dateCreated datePublished" datetime="2022-07-03T17:30:03+08:00">2022-07-03</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2025-11-29 15:11:18" itemprop="dateModified" datetime="2025-11-29T15:11:18+08:00">2025-11-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="MySQL-8-0新特性和性能数据"><a href="#MySQL-8-0新特性和性能数据" class="headerlink" title="MySQL 8.0新特性和性能数据"></a>MySQL 8.0新特性和性能数据</h1><h2 id="MySQL-8-0带来了很多新特性"><a href="#MySQL-8-0带来了很多新特性" class="headerlink" title="MySQL 8.0带来了很多新特性"></a>MySQL 8.0带来了很多新特性</h2><p>针对性能方面介绍全在这个PPT（ <a target="_blank" rel="noopener" href="http://dimitrik.free.fr/Presentations/MySQL_Perf-OOW2018-dim.pdf%EF%BC%89%E9%87%8C%E9%9D%A2%E4%BA%86%EF%BC%9A">http://dimitrik.free.fr/Presentations/MySQL_Perf-OOW2018-dim.pdf）里面了：</a></p>
+<p>IO_Bound 下性能提升简直非常明显，之前主要是fil_system的锁导致IO的并发上不去，见图1。</p>
+<p>因为优化了redo的写入模式，采用了事件的模型，所以写入场景有较好的提升 。</p>
+<p>utf8mb4在点查询场景优势不明显，在distinct range查询下有30%提升。</p>
+<p>内存只读场景略有提升。</p>
+<p>还有傲腾对SSD的数据，不过Intel都放弃了，就不说了。</p>
+<h2 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h2><h3 id="page-size"><a href="#page-size" class="headerlink" title="page size"></a>page size</h3><p>MySQL的页都是16K, 当查询的行不在内存中时需要按照16K为单位从磁盘读取页,而文件系统中的页是4k，也就是一次数据库请求需要有4次磁盘IO，如过查询比较随机，每次只需要一个页中的几行数据，存在很大的读放大。</p>
+<p>那么我们是否可以把MySQL的页设置为4K来减少读放大呢？</p>
+<p>在5.7里收益不大，因为每次IO存在 fil_system 的锁，导致IO的并发上不去</p>
+<p>8.0中总算优化了这个场景，测试细节可以参考<a target="_blank" rel="noopener" href="http://dimitrik.free.fr/blog/archives/2018/05/mysql-performance-1m-iobound-qps-with-80-ga-on-intel-optane-ssd.html">这篇</a></p>
+<p>16K VS 4K 性能对比（4K接近翻倍）</p>
+<p><img src="/images/951413iMgBlog/1547605552845-d406952d-9857-462d-a666-1694b19fbedb.png" alt="img"></p>
+<p>4K会带来的问题：顺序insert慢了10%（因为fsync更多了）；DDL更慢；二级索引更多的场景下4K性能较差；大BP下，刷脏代价大。</p>
+<h3 id="REDO的优化"><a href="#REDO的优化" class="headerlink" title="REDO的优化"></a><strong>REDO的优化</strong></h3><p>redo的优化似乎是8.0读写性能优于以往的主要原因</p>
+<p>redo的模型改成了事件驱动，而不是通过争抢锁实现，专用的flush线程刷完IO后通知用户线程，并且会根据IO的rt自动调整每次flush的data大小，如果io延迟很低，就大量小IO，如果IO延迟高，就用大io刷，也就说redo的刷写能力完全取决于IO的吞吐</p>
+<p>但是事件驱动的方式在小并发下性能没有单线程锁的方式高效，这块已经优化了，需要自己测下效果</p>
+<p><img src="/images/951413iMgBlog/image-20220810150929638.png" alt="image-20220810150929638"></p>
+<h2 id="Innodb-相关数据"><a href="#Innodb-相关数据" class="headerlink" title="Innodb 相关数据"></a>Innodb 相关数据</h2><p><strong>innodb_row_read</strong>：行读，点查峰值大约在800W左右，列表查大约在1200W左右。<br><strong>innodb_buffer_pool_read_requests</strong>：逻辑读，峰值800W左右。<br><strong>innodb_bp_hit</strong>：innodb bp缓存命中率，比较优秀的命中率一般在99.8%+。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>MySQL 8.0优化总结，从官方给出的数据来看，可以总结如下</p>
+<ul>
+<li>只读场景没有什么优化</li>
+<li><a target="_blank" rel="noopener" href="https://yuque.antfin-inc.com/frodo/lyul32/qcggx4#b329a99a">utf8mb4的性能提升比较明显</a></li>
+<li>优化了fil_system，<a target="_blank" rel="noopener" href="https://yuque.antfin-inc.com/frodo/lyul32/qcggx4#26583664">MySQL 可以尝试使用4K的页</a></li>
+<li>8.0使用新硬件能够获得较好的收益，多socket, optane</li>
+<li>由于redo的优化以及<a target="_blank" rel="noopener" href="https://mysqlserverteam.com/contention-aware-transaction-scheduling-arriving-in-innodb-to-boost-performance/">新的热点检查算法</a>，关闭binlog下，读写混合的场景性能比5.7好很多，但是生产环境无法关闭binlog，默认的字符集也不是latin，所以具体的数据需要单独测试，官方数据只能参考</li>
+<li>Double Write的问题需要在高并发，低命中率下才会触发，生产环境遇到的不多，该问题预计下个版本就修复了</li>
+<li>生产环境需要关闭UNDO Auto-Truncate </li>
+<li>binlog的问题在8.0比较明显，暂时没有解法</li>
+<li>另外innodb_flush_method&#x3D;O_DIRECT_NO_FSYNC 在8.0.14版本后可以保障应用的稳定性了</li>
+</ul>
+<blockquote>
+<p>Prior to 8.0.14, the <code>O_DIRECT_NO_FSYNC</code> setting is not recommended for use on Linux systems. It may cause the operating system to hang due to file system metadata becoming unsynchronized. As of MySQL 8.0.14, <code>InnoDB</code> calls <code>fsync()</code> after creating a new file, after increasing file size, and after closing a file, which permits <code>O_DIRECT_NO_FSYNC</code> mode to be safely used on EXT4 and XFS file systems. The <code>fsync()</code> system call is still skipped after each write operation.</p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -2856,231 +2973,6 @@
 <p><img src="/images/951413iMgBlog/format,webp-4378791." alt="img"></p>
 <p>FNAT:</p>
 <p><img src="/images/951413iMgBlog/format,webp-20240823100700538" alt="img"></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://plantegg.github.io/2022/01/01/Apple_M1_Pro%E5%92%8CIntel_I9-12900K%E8%B0%81%E5%BC%BA/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="twitter @plantegg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="plantegg">
-      <meta itemprop="description" content="java mysql tcp performance network docker Linux">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | plantegg">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2022/01/01/Apple_M1_Pro%E5%92%8CIntel_I9-12900K%E8%B0%81%E5%BC%BA/" class="post-title-link" itemprop="url">Apple M1 Pro 和 Intel I9-12900K到底谁强</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2022-01-01 12:30:03" itemprop="dateCreated datePublished" datetime="2022-01-01T12:30:03+08:00">2022-01-01</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2025-11-16 19:58:49" itemprop="dateModified" datetime="2025-11-16T19:58:49+08:00">2025-11-16</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/CPU/" itemprop="url" rel="index"><span itemprop="name">CPU</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="Apple-M1-Pro-和-Intel-I9-12900K到底谁强"><a href="#Apple-M1-Pro-和-Intel-I9-12900K到底谁强" class="headerlink" title="Apple M1 Pro 和 Intel I9-12900K到底谁强"></a>Apple M1 Pro 和 Intel I9-12900K到底谁强</h1><p>主要比较 M1 Pro和 I9-12900K，从芯片的参数来分析他们的差异。不和M1Max、M1Ultra比是因为从成本看没有可比性，M1Max、M1Ultra应该比I9贵多了，比起来意义不大，M1Max、M1Ultra的场景不一样。结论在最后</p>
-<p>网上很多拿I9-12900K和M1 Max比实际没有意义，CPU core方面M1 Max和M1 Pro是一样的（跑分结果一样），干嘛不挑个便宜的去比较！</p>
-<h2 id="The-M1-Pro"><a href="#The-M1-Pro" class="headerlink" title="The M1 Pro"></a><strong>The M1 Pro</strong></h2><p>The M1 Pro takes this higher, with:</p>
-<ul>
-<li>33.7 billion transistors on a 240mm squared die.</li>
-<li>8 performance cores, 24MB L2 Cache，每个core 3MB，cache跟不要钱一样的堆</li>
-<li>2 efficiency cores with 4MB L2 cache，每个core 2MB</li>
-<li>16 GPU Cores.</li>
-<li>32GB DDR5 memory at 200GB&#x2F;s.</li>
-</ul>
-<p><img src="/images/951413iMgBlog/image-20220402101632476-8873839.png" alt="image-20220402101632476"></p>
-<p><strong>从性能来看不推荐买M1</strong>，内存还是DDR4，M1Pro以上就都是DDR5了（文后有惊喜告诉你怎么用M1的价格买到M1 Pro） </p>
-<p><img src="/images/951413iMgBlog/image-20220402104020407-8873873.png" alt="image-20220402104020407"></p>
-<p>上图中PCPU就是高性能核，共8个，PCPU左边的是低频节能的2个ECPU，机器不忙的时候可以用ECPU，节能。一旦有复杂任务就可以用PCPU。至于M1 Max在狂堆 GPU, 然后M1 Ultra学习AMD把两块M1 Max封装在一起，有没有用就看你的应用场景了，比如搞程序编译、跑跑Idea用M1 Pro就够了，没必要多花几倍的钱用在GPU上，搞视频编辑、图片处理可以考虑Max、Ultra。</p>
-<h3 id="The-M1-Max"><a href="#The-M1-Max" class="headerlink" title="The M1 Max"></a><strong>The M1 Max</strong></h3><p>The M1 Max provides:（相对M1 Pro主要是多堆了 16个GPU，CPU方面是一样的，大多数跑分是M1 Pro和Max几乎一样，多花钱买那16个GPU不一定值得）</p>
-<ul>
-<li>57 billion transistors on a 420mm squared die.</li>
-<li>8 performance cores, 24MB L2 Cache.</li>
-<li>2 efficiency cores with 4MB L2 cache.</li>
-<li>32 GPU Cores.</li>
-<li>64GB DDR5 memory at 400GB&#x2F;s.</li>
-</ul>
-<h3 id="And-the-new-M1-Ultra"><a href="#And-the-new-M1-Ultra" class="headerlink" title="And the new M1 Ultra"></a><strong>And the new M1 Ultra</strong></h3><p>The M1 Ultra brings you:（下面的数据完全是M1 Max的2倍，实际就是封装两块M1 Max）</p>
-<ul>
-<li>114 billion transistors on a 840mm squared die.</li>
-<li>16 performance cores, 48MB L2 Cache.</li>
-<li>4 efficiency cores with 4MB L2 cache.</li>
-<li>64 GPU Cores.</li>
-<li>Up to 128GB DDR5 memory at 800GB&#x2F;s.</li>
-</ul>
-<h3 id="M1-Pro主板拆解"><a href="#M1-Pro主板拆解" class="headerlink" title="M1 Pro主板拆解"></a>M1 Pro主板拆解</h3><p><img src="/images/951413iMgBlog/image-20220506142049220.png" alt="image-20220506142049220"></p>
-<p>上图中，红框是 M1 Pro 芯片，黄框是三星 8GB 内存（共两块），绿框是铠侠的 128GB 闪存（共两块）。</p>
-<h2 id="Inel-I9-12900K"><a href="#Inel-I9-12900K" class="headerlink" title="Inel I9-12900K"></a>Inel I9-12900K</h2><p>对比下 i9-12900K，i9也有GPU只是没有说多少个，它的GPU频率在0.3到1.55GHz之间</p>
-<p><img src="/images/951413iMgBlog/400px-alder_lake_die_2.png" alt="alder lake die 2.png"></p>
-<table>
-<thead>
-<tr>
-<th>ISA</th>
-<th>x86-64 (x86)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Microarchitecture</td>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/alder_lake">Alder Lake</a>, <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/golden_cove">Golden Cove</a>, <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/gracemont">Gracemont</a></td>
-</tr>
-<tr>
-<td>Process</td>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/w/index.php?title=Intel_7_process&action=edit&redlink=1">Intel 7</a></td>
-</tr>
-<tr>
-<td>Die</td>
-<td>215.25 mm²” 20.5 mm × 10.5 mm</td>
-</tr>
-<tr>
-<td>MCP</td>
-<td>No (1 dies)</td>
-</tr>
-<tr>
-<td>Cores</td>
-<td>16</td>
-</tr>
-<tr>
-<td>Threads</td>
-<td>24</td>
-</tr>
-<tr>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Property:l1$_size">l1$ size</a></td>
-<td>0.75 MiB (768 KiB, 786,432 B, 7.324219e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1-24-20size/0.75-20MiB">+</a> and 0.625 MiB (640 KiB, 655,360 B, 6.103516e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1-24-20size/0.625-20MiB">+</a></td>
-</tr>
-<tr>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Property:l1d$_size">l1d$ size</a></td>
-<td>0.25 MiB (256 KiB, 262,144 B, 2.441406e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1d-24-20size/0.25-20MiB">+</a> and 0.375 MiB (384 KiB, 393,216 B, 3.662109e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1d-24-20size/0.375-20MiB">+</a></td>
-</tr>
-<tr>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Property:l1i$_size">l1i$ size</a></td>
-<td>0.5 MiB (512 KiB, 524,288 B, 4.882812e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1i-24-20size/0.5-20MiB">+</a> and 0.25 MiB (256 KiB, 262,144 B, 2.441406e-4 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l1i-24-20size/0.25-20MiB">+</a></td>
-</tr>
-<tr>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Property:l2$_size">l2$ size</a></td>
-<td>4 MiB (4,096 KiB, 4,194,304 B, 0.00391 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l2-24-20size/4-20MiB">+</a> and 10 MiB (10,240 KiB, 10,485,760 B, 0.00977 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l2-24-20size/10-20MiB">+</a> 共14Mb</td>
-</tr>
-<tr>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Property:l3$_size">l3$ size</a></td>
-<td>6 MiB (6,144 KiB, 6,291,456 B, 0.00586 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l3-24-20size/6-20MiB">+</a> and 24 MiB (24,576 KiB, 25,165,824 B, 0.0234 GiB) <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/Special:SearchByProperty/:l3-24-20size/24-20MiB">+</a> 共30Mb</td>
-</tr>
-<tr>
-<td>TDP</td>
-<td>125 W</td>
-</tr>
-</tbody></table>
-<p>从下面的芯片分布图来看，绿色部分是8个高性能物理core，每个2 thread，绿色其右边的蓝色E Cores是8个低频节能core，没开超线程，所以24个threads就是2*8PCPU+8ECPU。真正打起仗来从蓝色部分的面积占比来看基本可以忽略，重点得靠绿色的PCPU。</p>
-<p><img src="/images/951413iMgBlog/arch2_small.jpg" alt="img"></p>
-<h2 id="性能比较"><a href="#性能比较" class="headerlink" title="性能比较"></a>性能比较</h2><p>从上面分析来看 I9-12900K和M1 Pro的比较最终回到了各自8个PCPU的较量。Intel&#x2F;X86的超线程在大部分场景下可以提升单核计算能力的1.5倍左右，所以这里就是Intel的12core打M1 Pro的，另外Intel主频也比M1 Pro要高，如果比较单core的计算能力Intel能睿频到5GHz以上，所以不考虑视频、图片、矩阵等简单计算场景，Intel的性能应该还是要强很多的。但是如果作为笔记本来说一定要考虑功耗，125W VS 45W，我的建议是买Apple（M1的软件兼容性也是个问题）。如果是当服务器工作站使用还是建议买I9. 价钱就不好比较了M1 Pro不单独卖没法估计价格。</p>
-<p>I9弱在内存还是DDR4，而M1 Pro是DDR5了，另外就是M1 Pro的L2要大。当然I9也有DDR5的内存的。</p>
-<p>笔记本领域M1整体来看应该优势明显，尤其是经过几年的生态发展能够把软件生态补上的话。</p>
-<h2 id="购买建议"><a href="#购买建议" class="headerlink" title="购买建议"></a>购买建议</h2><p>如果想买苹果，推荐买这款：</p>
-<p><img src="/images/951413iMgBlog/image-20220402103153047-8874337.png" alt="image-20220402103153047"></p>
-<p>这种<a target="_blank" rel="noopener" href="https://ata.alibaba-inc.com/articles/211563">非标8核的M1（就是10核关闭了2核），便宜了2500，特别值</a>。苹果从来没有发布过8核的M1 Pro芯片，但是这款售卖的CPU号称是M1 Pro，比正常的M1 Pro少了两个CPU core和两个GPU。这点差异是不会重新设计一个新的芯片多搞一条生产线的，一般是正常的M1 Pro生产线下来检测发现坏了个别的core，扔了太浪费，于是关掉坏core当低配的M1 Pro在卖，价钱便宜了快一半了，实际性能其实差得不多。</p>
-<p>如果是买Intel i9的话，从性价比上来看如果能买到i5-12600K也是非常不错的，实际就是i9关掉(坏掉)了2个PCPU和4个ECPU，价钱是i9的一半不到，PCPU少了但是Base主频反而高了，因为总核少了，发热就能控制，所以单核能跑到的频率更高一些。</p>
-<p><img src="/images/951413iMgBlog/image_19.jpg" alt="image 19"></p>
-<p>其实I9、I7、I5都是同一条生产线、同样的工艺下制造出来的，差别在于帮I9分摊成本，比如你看看<a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/core_i5/i5-12600k">i5-12600k的参数</a>和i9-12900K基本是一样的，重点在215.25 mm² 的 Die Size：</p>
-<table>
-<thead>
-<tr>
-<th>ISA</th>
-<th>x86-64 (x86)</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Microarchitecture</td>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/alder_lake">Alder Lake</a>, <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/golden_cove">Golden Cove</a>, <a target="_blank" rel="noopener" href="https://en.wikichip.org/wiki/intel/microarchitectures/gracemont">Gracemont</a></td>
-</tr>
-<tr>
-<td>Process</td>
-<td><a target="_blank" rel="noopener" href="https://en.wikichip.org/w/index.php?title=Intel_7_process&action=edit&redlink=1">Intel 7</a></td>
-</tr>
-<tr>
-<td>Die</td>
-<td>215.25 mm² 20.5 mm × 10.5 mm</td>
-</tr>
-<tr>
-<td>Cores</td>
-<td>10</td>
-</tr>
-<tr>
-<td>Threads</td>
-<td>16</td>
-</tr>
-</tbody></table>
-<p>即使把 <a target="_blank" rel="noopener" href="https://www.techpowerup.com/review/intel-core-i5-12600k-alder-lake-12th-gen/2.html">i5-12600k拆开</a>用放大镜看也是和i9-12900K 一样的：</p>
-<p><img src="/images/951413iMgBlog/arch1_small.jpg" alt="img"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
-<li>笔记本建议买M1 Pro</li>
-<li>M1和M1 Pro如果看重性能的话肯定要买M1 Pro了</li>
-<li>M1 Pro 建议买8 core的，买到就是赚到</li>
-<li>集团内M1 Pro想要轻便就选14寸的，综合考虑我还是推荐14寸的</li>
-<li>I9的笔记本建议买I7、I5，平时使用性能差得不多</li>
-<li>性能还是I9强，做服务器更合适</li>
-</ul>
-<p>最后我手里头既没有I9也没有M1，结论靠键盘 :)，买错了别找我。</p>
-<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a target="_blank" rel="noopener" href="https://ata.alibaba-inc.com/articles/211563">CPU的生产和概念</a></p>
 
       
     </div>
